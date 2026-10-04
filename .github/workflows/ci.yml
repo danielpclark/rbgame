@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly: notice when the SDL translation has moved on (see docs/UPSTREAM.md).
+    - cron: "17 6 * * 1"
+
+jobs:
+  test:
+    name: Ruby ${{ matrix.ruby }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        ruby: ["3.2", "3.3", "3.4"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build the extension
+        run: bundle exec rake rutie:build
+      - name: Test rbgame
+        run: bundle exec rake test
+      - name: Test the Gorillas demo
+        run: bundle exec rake gorillas:test
+      - name: Run Gorillas unattended for 300 frames
+        run: bundle exec rake gorillas:record FRAMES=300 DIR=tmp/frames
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  sdl-upstream:
+    name: SDL translation up to date?
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - name: Compare the pinned revision with upstream HEAD
+        run: bundle exec rake sdl:check
+        continue-on-error: ${{ github.event_name == 'pull_request' }}

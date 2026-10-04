@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "rbgame"
+require "irb"
+
+Rbgame.init
+puts "rbgame #{Rbgame::VERSION} on SDL #{Rbgame.sdl_version} (#{Rbgame::Display.driver} video driver)"
+IRB.start(__FILE__)

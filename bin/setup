@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+bundle install
+cargo build --release
+echo "rbgame is ready: try \`bundle exec rake gorillas:play\`"

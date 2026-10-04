@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Play Gorillas:        bin/gorillas
+# Watch it play itself: bin/gorillas --autoplay
+# Record frames:        bin/gorillas --autoplay --record frames/ --frames 600
+
+require "optparse"
+
+lib = File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+rbgame_lib = File.expand_path("../../../lib", __dir__)
+$LOAD_PATH.unshift(rbgame_lib) if File.directory?(rbgame_lib) && !$LOAD_PATH.include?(rbgame_lib)
+
+require "gorillas"
+
+settings = { autoplay: false, record: nil, frames: nil, every: 1, names: nil, play_to: 3, gravity: 9.8,
+             seed: nil, sound: true, accuracy: 0.6, scale: 2 }
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: gorillas [options]"
+  opts.on("--autoplay", "Both gorillas aim for themselves") { settings[:autoplay] = true }
+  opts.on("--record DIR", "Save every frame as a BMP in DIR") { |dir| settings[:record] = dir }
+  opts.on("--every N", Integer, "With --record, save every Nth frame") { |n| settings[:every] = n }
+  opts.on("--frames N", Integer, "Stop after N frames") { |n| settings[:frames] = n }
+  opts.on("--names A,B", Array, "Player names") { |names| settings[:names] = names.first(2) }
+  opts.on("--points N", Integer, "Play to N points") { |n| settings[:play_to] = n }
+  opts.on("--gravity G", Float, "Gravity (Earth = 9.8)") { |g| settings[:gravity] = g }
+  opts.on("--seed N", Integer, "Seed the city and the wind") { |n| settings[:seed] = n }
+  opts.on("--accuracy F", Float, "Autoplayer accuracy 0..1") { |f| settings[:accuracy] = f }
+  opts.on("--scale N", Integer, "Window scale (1 = 640x350)") { |n| settings[:scale] = n }
+  opts.on("--no-sound", "Silence") { settings[:sound] = false }
+  opts.on("-h", "--help") { puts opts; exit }
+end.parse!
+
+names = settings[:names] || (settings[:autoplay] ? %w[Ruby Rust] : ["Player 1", "Player 2"])
+options = Gorillas::Options.new(autoplay: settings[:autoplay], names: names, play_to: settings[:play_to],
+                                gravity: settings[:gravity], seed: settings[:seed], sound: settings[:sound],
+                                accuracy: settings[:accuracy], scale: settings[:scale])
+
+if settings[:record]
+  require "fileutils"
+  FileUtils.mkdir_p(settings[:record])
+end
+
+Rbgame.init
+warn "rbgame: no window on this machine (#{Rbgame::Display.driver} driver); running headless" if Rbgame.headless? && !settings[:record]
+
+game = Gorillas::Game.new(options)
+game.run(frames: settings[:frames], screenshots: settings[:record], every: settings[:every])

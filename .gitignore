@@ -1,0 +1,10 @@
+/target/
+/Cargo.lock.bak
+/pkg/
+/tmp/
+/coverage/
+*.gem
+*.bmp
+/.bundle/
+/vendor/bundle/
+Gemfile.lock
