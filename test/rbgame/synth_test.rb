@@ -46,6 +46,21 @@ class SynthTest < Minitest::Test
     refute sound.to_samples.all?(&:zero?)
   end
 
+  def test_square_wave_shape
+    wave = Rbgame::Synth::SquareWave.new(frequency: 100.0, rate: 1000, seconds: 0.02, sounding: 0.015)
+    samples = wave.to_a
+    assert_equal 20, samples.length
+    assert_equal [Rbgame::Synth::AMPLITUDE] * 5, samples.first(5), "the first half period is high"
+    assert_equal [-Rbgame::Synth::AMPLITUDE] * 5, samples[5, 5], "the second half is low"
+    assert_equal [0.0] * 5, samples.last(5), "after the sounding part comes silence"
+  end
+
+  def test_samples_are_lazy
+    synth = Synth.new("T60 L1 C C C C") # four whole notes, 16 seconds
+    assert_kind_of Enumerator::Lazy, synth.each_sample
+    assert_equal 10, synth.each_sample.first(10).length
+  end
+
   def test_rejects_garbage
     assert_raises(ArgumentError) { Synth.new("C X") }
   end

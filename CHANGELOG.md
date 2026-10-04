@@ -23,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `rake sdl:check` / `rake sdl:update` to follow the SDL translation.
 
 ### Changed
+- The library restructured around objects: `Mixer` is an instance given its
+  output (`Mixer::Silence` when there is none; `Mixer.default` keeps the old
+  class-level API), `Game` records frames through a `FrameRecorder`,
+  `Canvas#draw` takes anything with `with_texture` (Surface and Texture), named
+  SDL modes resolve through `Rbgame::Mode` (`BLEND_MODES`, `SCALE_MODES`,
+  `FLIP_MODES`, `PRESENTATION_MODES`), `Canvas` is split into `Shapes`, `Text`
+  and `Images` concerns, `Synth` into a `Score`, a `SquareWave` and a lazy
+  sample stream, `Rbgame.init` into `Subsystems` with the driver choice in
+  `VideoDriver.choose`, and key state moves to `Keyboard` (`Key.pressed?` stays).
+- RBS signatures for the public API in `sig/`, validated by `rake rbs:validate`
+  and CI.
 - Gorillas restructured around objects: `Round` delegates to phase objects
   (`Aiming`, `Flying`, `Exploding`, `Dancing`, `Over`), input goes through a
   `Questionnaire` answered by a `Keyboard` or an `Autopilot` controller, the

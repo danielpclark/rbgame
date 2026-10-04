@@ -6,8 +6,8 @@ module Rbgame
   # constants has to be memorised:
   #
   #   event.key?(:escape)
-  #   Key.pressed?(:left)             # current state, outside the event stream
   #   Key.code(:return)               # the SDL keycode, if ever needed
+  #   Keyboard.pressed?(:left)        # current state, outside the event stream
   module Key
     # Bits of KeyDown#modifiers (SDL_Keymod).
     module Mod
@@ -26,6 +26,10 @@ module Rbgame
       CTRL = LCTRL | RCTRL
       ALT = LALT | RALT
       GUI = LGUI | RGUI
+
+      def self.shift?(bits) = (bits & SHIFT) != 0
+      def self.ctrl?(bits) = (bits & CTRL) != 0
+      def self.alt?(bits) = (bits & ALT) != 0
     end
 
     # SDL spells some names in ways a Symbol can't carry well; these are the
@@ -80,20 +84,10 @@ module Rbgame
         ALIASES.key(sdl_name) || sdl_name.downcase.tr(" ", "_").to_sym
       end
 
-      # Is the key held down right now?
-      def pressed?(key)
-        Native.key_pressed?(Native.scancode_from_key(code(key)))
-      end
-
-      # Symbols of every key currently held.
-      def pressed
-        Native.pressed_scancodes.map { |scancode| sym(Native.key_from_scancode(scancode)) }
-      end
-
-      def modifiers = Native.mod_state
-      def shift? = (modifiers & Mod::SHIFT) != 0
-      def ctrl? = (modifiers & Mod::CTRL) != 0
-      def alt? = (modifiers & Mod::ALT) != 0
+      # Key state lives in Keyboard; these stay for the common question.
+      def pressed?(key) = Keyboard.pressed?(key)
+      def pressed = Keyboard.pressed
+      def modifiers = Keyboard.modifiers
     end
   end
 end

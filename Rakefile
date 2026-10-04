@@ -62,4 +62,11 @@ namespace :sdl do
   end
 end
 
-task default: %i[test gorillas:test]
+namespace :rbs do
+  desc "Validate the RBS type signatures in sig/"
+  task :validate do
+    sh "rbs", "-I", "sig", "validate"
+  end
+end
+
+task default: %i[test gorillas:test rbs:validate]

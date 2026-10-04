@@ -36,6 +36,37 @@ Every method that takes a colour, point or rect takes *anything that can be
 coerced* to one: `:red`, `"#ff0000"`, `[255, 0, 0]`, a `Color`. Coercion lives
 in one place per type (`Color.coerce`, `Vector.coerce`, `Rect.coerce`).
 
+## Objects over branches
+
+The library prefers an object that knows what to do over a method that
+asks and decides. A `Mixer` is given its output and never checks for nil:
+with no device the output is `Mixer::Silence`, which does nothing quietly.
+`Game#run` records frames through a `FrameRecorder`, or `FrameRecorder::Nothing`
+when nothing was asked for. `Canvas#draw` does not ask whether it was given
+a Surface or a Texture; both respond to `with_texture(canvas)`, and each
+does the right thing (upload for the call, or hand itself over). Named SDL
+modes (`:blend`, `:nearest`, `:horizontal`) go through a `Mode` that resolves
+them and names the choices when one is wrong.
+
+## One concern per file
+
+`Canvas` is its state (size, fill, clip, blend, logical resolution, reading
+back) with three concerns mixed in from their own files: `Shapes`, `Text`
+and `Images`. `Synth` is a `Score` that reads PLAY syntax, a `SquareWave`
+that sounds one note, and a lazy stream joining them. `Rbgame.init` is a
+facade over `Subsystems`; which video driver to ask for is decided by
+`VideoDriver.choose`, a pure function with its own tests. `Key` names keys;
+`Keyboard` reports their state.
+
+Public methods read as a sentence; the arithmetic sits behind them in small
+private methods or a value object (`Canvas::Images::Placement`, `Color::HSV`).
+
+## Types, where Ruby lets us
+
+`sig/rbgame.rbs` declares the public API's types (including the coercible
+`colorish`, `vectorish` and `rectish` inputs), and `rake rbs:validate` keeps
+them well-formed in CI. The native layer is typed by Rust.
+
 ## Resources are objects with a clear owner
 
 Windows, renderers, surfaces, textures and audio streams are Rust values

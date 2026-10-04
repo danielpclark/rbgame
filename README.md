@@ -124,10 +124,10 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Surface` | CPU pixels: `fill`, `fill_circle`, `[x, y]`, `blit`, `scaled`, `rotated`, `flipped`, `color_key=`, `save`/`Surface.load` (BMP) |
 | `Texture` | a `Surface` uploaded for fast drawing; `alpha=`, `color_mod=`, `blend_mode=` |
 | `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `Window`, ... are `Data` |
-| `Key`, `Mouse` | `Key.pressed?(:left)`, `Key.code(:space)`, `Mouse.position` |
+| `Key`, `Keyboard`, `Mouse` | `Key.code(:space)`, `Keyboard.pressed?(:left)`, `Mouse.position` |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
-| `Sound`, `Mixer`, `Synth` | WAV or sample playback; `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |
+| `Sound`, `Mixer`, `Synth` | WAV or sample playback (`Mixer.default`, or your own with any output); `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |
 | `Game` | `setup`/`update(dt)`/`draw(screen)`/`on_event`; `run(frames:, screenshots:)` |
 
 Everything that takes a colour accepts `Color`, `:red`, `"#ff0000"`,
@@ -141,6 +141,7 @@ src/            the Rust extension: Rbgame::Native, thin and primitive
 lib/rbgame/     the Ruby API
 examples/       Gorillas
 test/           minitest, headless
+sig/            RBS type signatures for the public API
 docs/           DESIGN.md (why it looks like this), UPSTREAM.md (following SDL)
 ```
 

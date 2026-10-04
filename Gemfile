@@ -7,4 +7,5 @@ gemspec
 group :development, :test do
   gem "minitest", ">= 5.20"
   gem "rake", ">= 13.0"
+  gem "rbs", ">= 3.4"
 end

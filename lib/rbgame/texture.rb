@@ -26,11 +26,16 @@ module Rbgame
     end
 
     def blend_mode=(mode)
-      renderer.set_texture_blend_mode(native, Surface.blend_mode(mode))
+      renderer.set_texture_blend_mode(native, BLEND_MODES.code(mode))
     end
 
     def scale_mode=(mode)
-      renderer.set_texture_scale_mode(native, Surface.scale_mode(mode))
+      renderer.set_texture_scale_mode(native, SCALE_MODES.code(mode))
+    end
+
+    # A Texture is its own texture; see Surface#with_texture.
+    def with_texture(_canvas)
+      yield self
     end
 
     # Frees the texture now instead of when the canvas goes away.

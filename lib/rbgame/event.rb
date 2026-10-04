@@ -16,9 +16,9 @@ module Rbgame
       def sym = Key.sym(key)
       def key?(name) = sym == name.to_sym || key == Key.code(name)
       def char = key.between?(32, 126) ? key.chr : nil
-      def shift? = (modifiers & Key::Mod::SHIFT) != 0
-      def ctrl? = (modifiers & Key::Mod::CTRL) != 0
-      def alt? = (modifiers & Key::Mod::ALT) != 0
+      def shift? = Key::Mod.shift?(modifiers)
+      def ctrl? = Key::Mod.ctrl?(modifiers)
+      def alt? = Key::Mod.alt?(modifiers)
       def repeat? = repeat
 
       def deconstruct_keys(keys)

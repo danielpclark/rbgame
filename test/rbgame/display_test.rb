@@ -65,6 +65,19 @@ class DisplayTest < Minitest::Test
     assert texture.destroyed?
   end
 
+  def test_surfaces_draw_like_textures
+    sprite = Rbgame::Surface.new(4, 4).fill(:cyan)
+    @screen.fill(:black)
+    @screen.draw(sprite, at: [10, 10])
+    @screen.draw(sprite, rect: [30, 30, 8, 8], angle: 180, alpha: 255)
+    @screen.draw(sprite, at: [50, 50], source: [0, 0, 2, 2])
+    shot = @screen.to_surface
+    assert_equal Color::CYAN, shot[11, 11]
+    assert_equal Color::CYAN, shot[34, 34]
+    assert_equal Color::CYAN, shot[51, 51]
+    assert_equal Color::BLACK, shot[53, 53], "only the 2x2 source cell was drawn"
+  end
+
   def test_clip_restricts_drawing
     @screen.fill(:black)
     @screen.clip([0, 0, 50, 50]) { |canvas| canvas.fill_rect([0, 0, 200, 120], :blue) }

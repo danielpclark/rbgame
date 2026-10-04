@@ -11,19 +11,10 @@ module Rbgame
   #   mask[10, 10]            # => Color
   #   mask.save("mask.bmp")
   class Surface
-    SCALE_MODES = { nearest: 0, linear: 1, pixel_art: 2 }.freeze
-    FLIP_MODES = { none: 0, horizontal: 1, vertical: 2 }.freeze
-    BLEND_MODES = { none: 0, blend: 1, add: 2, mod: 4, mul: 8 }.freeze
-
     attr_reader :native
 
-    class << self
-      # Loads a BMP file (the format SDL reads without SDL_image).
-      def load(path) = new(Native.load_bmp(path.to_s))
-
-      def scale_mode(mode) = SCALE_MODES.fetch(mode) { raise ArgumentError, "unknown scale mode #{mode.inspect}" }
-      def blend_mode(mode) = BLEND_MODES.fetch(mode) { raise ArgumentError, "unknown blend mode #{mode.inspect}" }
-    end
+    # Loads a BMP file (the format SDL reads without SDL_image).
+    def self.load(path) = new(Native.load_bmp(path.to_s))
 
     # Surface.new([w, h]) or Surface.new(w, h); also wraps a Native::Surface.
     def initialize(size_or_native, height = nil)
@@ -103,7 +94,7 @@ module Rbgame
     def blit_scaled(source, rect, source_rect: nil, mode: :nearest)
       rect = Rect.coerce(rect).round
       src = source_rect && Rect.coerce(source_rect).round
-      native.blit_scaled(source.native, *(src ? src.to_a : [nil] * 4), *rect.to_a, Surface.scale_mode(mode))
+      native.blit_scaled(source.native, *(src ? src.to_a : [nil] * 4), *rect.to_a, SCALE_MODES.code(mode))
       self
     end
 
@@ -123,10 +114,10 @@ module Rbgame
     def alpha = native.alpha_mod
 
     def blend_mode=(mode)
-      native.blend_mode = Surface.blend_mode(mode)
+      native.blend_mode = BLEND_MODES.code(mode)
     end
 
-    def blend_mode = BLEND_MODES.key(native.blend_mode) || native.blend_mode
+    def blend_mode = BLEND_MODES.name(native.blend_mode)
 
     def color_mod=(color)
       native.set_color_mod(*Color.coerce(color).rgb)
@@ -142,7 +133,7 @@ module Rbgame
 
     def scaled(size, mode: :nearest)
       size = Vector.coerce(size)
-      Surface.new(native.scale(size.x.round, size.y.round, Surface.scale_mode(mode)))
+      Surface.new(native.scale(size.x.round, size.y.round, SCALE_MODES.code(mode)))
     end
 
     # A copy rotated `degrees` counter-clockwise (the same direction as
@@ -150,11 +141,20 @@ module Rbgame
     def rotated(degrees) = Surface.new(native.rotate(-degrees.to_f))
 
     def flip!(direction)
-      native.flip(FLIP_MODES.fetch(direction) { raise ArgumentError, "flip :horizontal or :vertical" })
+      native.flip(FLIP_MODES.code(direction))
       self
     end
 
     def flipped(direction) = dup.flip!(direction)
+
+    # Uploads this surface to `canvas` for the block and frees it after, so
+    # a Surface can be drawn wherever a Texture can (see Canvas#draw).
+    def with_texture(canvas)
+      texture = canvas.texture(self)
+      yield texture
+    ensure
+      texture&.destroy
+    end
 
     # Raw RGBA bytes, `pitch` per row.
     def pixels = native.pixels
