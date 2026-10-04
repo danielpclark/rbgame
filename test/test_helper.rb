@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+# Tests never need a real window: run on SDL's offscreen driver whatever the
+# machine has, so results are the same everywhere (CI included).
+ENV["RBGAME_VIDEO_DRIVER"] ||= "offscreen"
+ENV["RBGAME_AUDIO_DRIVER"] ||= "dummy"
+
+require "minitest/autorun"
+require "tmpdir"
+require "rbgame"
+
+module RbgameTest
+  # A screen for integration tests, opened once per process.
+  def self.screen
+    @screen ||= begin
+      Rbgame.init
+      Rbgame::Display.set_mode([200, 120], title: "rbgame tests")
+    end
+  end
+end
