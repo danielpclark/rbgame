@@ -12,6 +12,10 @@ require "tmpdir"
 require "rbgame"
 
 module RbgameTest
+  # The driver the tests were told to use, and whether it can show a window.
+  def self.video_driver = ENV.fetch("RBGAME_VIDEO_DRIVER")
+  def self.headless? = Rbgame::VideoDriver.headless?(video_driver)
+
   # A screen for integration tests, opened once per process.
   def self.screen
     @screen ||= begin

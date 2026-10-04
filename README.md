@@ -94,20 +94,33 @@ return the canvas, so a frame is one chain ending in `present`.
 
 ## Status
 
-Early, and honest about it. The SDL translation has every platform-independent
-part of SDL (surfaces, every blitter, the software renderer, the event core,
-audio conversion) but **no platform video backend yet**: it cannot open a
-window on your desktop today. rbgame therefore runs on SDL's `offscreen`
-driver, draws into a framebuffer, and can read it back (`screen.to_surface`,
-`screen.screenshot`). That is enough for the test suite, for recording a
-game frame by frame, and for building a game that will show up on screen
-the day the Wayland/X11/Windows/Cocoa backends land upstream, with no change
-on this side. `docs/UPSTREAM.md` explains how rbgame follows that project.
+Early, and honest about it. The SDL translation now has its first platform
+backends, and rbgame uses them as they land:
+
+* **Windows on screen**: the X11 driver (Linux) and the Windows driver are
+  translated. On X11, rbgame opens a real window; the test suite runs on it
+  under Xvfb in CI, so what works headless is also checked on a display. The
+  Windows driver has not been tried by this project yet. Wayland and macOS
+  are still to come upstream; on a machine without a usable driver rbgame
+  falls back to SDL's `offscreen` driver, draws into a framebuffer, and can
+  read it back (`screen.to_surface`, `screen.screenshot`), which is how the
+  rest of the tests and the Gorillas recorder run.
+* **Sound**: ALSA, PulseAudio, PipeWire and WASAPI drivers are translated.
+  With no device, `Mixer` is silent rather than broken.
+* **Images**: `Surface.load` reads PNG, JPEG and BMP; `Surface#save` writes
+  PNG (or BMP by extension).
+* **Still missing upstream**: GPU renderers (everything is SDL's software
+  renderer, which is plenty for 2D), fonts beyond SDL's 8x8 debug font, and
+  gamepad input through rbgame's API.
+
+`docs/UPSTREAM.md` explains how rbgame follows that project.
 
 ## Installing
 
 Requirements: Ruby 3.2–3.4 (built `--enable-shared`), a stable Rust toolchain
-(1.87+), and nothing else: no SDL package, no C compiler.
+(1.87+), and nothing else: no SDL package, no C compiler. On Linux, SDL loads
+the system's X11 and audio client libraries at run time if they are there
+(`libX11`, `libasound`, `libpulse`, `libpipewire`), exactly as the C SDL does.
 
 ```sh
 git clone https://github.com/danielpclark/rbgame
@@ -146,7 +159,7 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Rbgame.init`, `Rbgame.run`, `Rbgame.quit` | subsystems; `headless?`, `sdl_version` |
 | `Display.set_mode(size, title:, logical:)` → `Screen` | the window's canvas; `present`, `screenshot` |
 | `Canvas` | `fill`, `fill_rect`, `stroke_rect`, `line` (any width), `lines`, `circle`, `ellipse`, `arc`, `polygon` (concave too), `text`, `draw(texture, at:/rect:, angle:, flip:)`, `clip { }`, `with_target(texture) { }`, `to_surface` |
-| `Surface` | CPU pixels: `fill`, `fill_circle`, `[x, y]`, `blit`, `scaled`, `rotated`, `flipped`, `color_key=`, `save`/`Surface.load` (BMP) |
+| `Surface` | CPU pixels: `fill`, `fill_circle`, `[x, y]`, `blit`, `scaled`, `rotated`, `flipped`, `color_key=`, `save`/`Surface.load` (PNG, JPEG, BMP) |
 | `Texture` | a `Surface` uploaded for fast drawing; `alpha=`, `color_mod=`, `blend_mode=` |
 | `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `Window`, ... are `Data` |
 | `Key`, `Keyboard`, `Mouse` | `Key.code(:space)`, `Keyboard.pressed?(:left)`, `Mouse.position` |

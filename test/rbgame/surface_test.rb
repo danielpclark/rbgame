@@ -66,6 +66,29 @@ class SurfaceTest < Minitest::Test
     end
   end
 
+  def test_save_and_load_png
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "pic.png")
+      surface = Surface.new(3, 2).fill(:black)
+      surface[1, 1] = Color.new(10, 20, 30, 128)
+      surface.save(path)
+      assert_equal "\x89PNG".b, File.binread(path, 4)
+      loaded = Surface.load(path)
+      assert_equal Rbgame::Vector[3, 2], loaded.size
+      assert_equal Color.new(10, 20, 30, 128), loaded[1, 1], "PNG keeps the alpha channel"
+    end
+  end
+
+  def test_load_tells_formats_apart_by_content
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "actually-a-bmp.png")
+      Surface.new(2, 2).fill(:green).save(File.join(dir, "pic.bmp"))
+      File.rename(File.join(dir, "pic.bmp"), path)
+      assert_equal Color::GREEN, Surface.load(path)[0, 0]
+      assert_raises(Rbgame::SDLError) { Surface.load(File.join(dir, "missing.png")) }
+    end
+  end
+
   def test_raw_pixels
     surface = Surface.new(1, 1).fill(:red)
     bytes = surface.pixels

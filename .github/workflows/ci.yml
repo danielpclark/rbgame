@@ -38,6 +38,27 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
 
+  x11:
+    name: X11 window under Xvfb
+    runs-on: ubuntu-latest
+    env:
+      RBGAME_VIDEO_DRIVER: x11
+      RBGAME_AUDIO_DRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install a virtual X server
+        run: sudo apt-get update && sudo apt-get install -y xvfb libx11-6
+      - name: Build the extension
+        run: bundle exec rake rutie:build
+      - name: Test on the real X11 driver
+        run: xvfb-run -a -s "-screen 0 1280x800x24" bundle exec rake test gorillas:test
+
   sdl-upstream:
     name: SDL translation up to date?
     runs-on: ubuntu-latest

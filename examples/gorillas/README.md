@@ -13,8 +13,8 @@ bin/gorillas --autoplay --record frames/ --frames 600 --every 2 --seed 7
 bin/gorillas --points 5 --gravity 1.6 --names Neil,Buzz
 ```
 
-Until the SDL translation grows a platform video backend the game draws to
-an offscreen framebuffer; `--record` is how to watch it today.
+On X11 the game opens a window; without a usable display it draws to an
+offscreen framebuffer, and `--record` is how to watch it.
 
 ## Layout
 

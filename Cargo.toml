@@ -23,7 +23,7 @@ lazy_static = "1"
 
 # Pure-Rust SDL 3. Pinned to a commit so builds are reproducible; refresh
 # with `rake sdl:update` (see docs/UPSTREAM.md) when upstream moves.
-sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "8da78a642d344e06216ebcb0f58693f0af15c6f4" }
+sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "dc9c4a48bd93d135de6e16e7c805b329670c1e0d" }
 
 [profile.release]
 opt-level = 3

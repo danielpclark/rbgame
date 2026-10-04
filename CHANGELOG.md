@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `rake sdl:check` / `rake sdl:update` to follow the SDL translation.
 
 ### Changed
+- SDL translation updated to `dc9c4a48` (90 upstream commits): the X11 and
+  Windows video drivers, so rbgame opens a real window on X11 (the suites run
+  on it under Xvfb in CI); ALSA, PulseAudio, PipeWire and WASAPI audio
+  drivers; PNG and JPEG codecs, exposed as `Surface.load` (PNG, JPEG, BMP)
+  and `Surface#save` (PNG, or BMP by extension); Linux and Windows joystick
+  drivers in the crate.
 - The library restructured around objects: `Mixer` is an instance given its
   output (`Mixer::Silence` when there is none; `Mixer.default` keeps the old
   class-level API), `Game` records frames through a `FrameRecorder`,
