@@ -5,7 +5,7 @@ module Rbgame
   #
   #   clock = Clock.new
   #   loop do
-  #     dt = clock.tick(60)       # seconds since the last tick, held to 60 fps
+  #     seconds = clock.tick(60)  # since the last tick, held to 60 fps
   #     clock.fps                 # smoothed frames per second
   #   end
   class Clock

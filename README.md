@@ -22,50 +22,75 @@ a `Game` class to subclass when you would rather not write the loop.
 ```ruby
 require "rbgame"
 
-class Bounce < Rbgame::Game
-  configure size: [640, 350], title: "Bounce", fps: 60
+module Bounce
+  # Where the ball is and where it is going. Moving it returns a new ball.
+  class Ball < Data.define(:center, :velocity, :radius)
+    include Rbgame
 
-  def setup
-    @pos = screen.center
-    @vel = Rbgame::Vector.polar(30, 180)   # degrees, pixels per second
+    def after(seconds, within:)
+      with(center: center + (velocity * seconds)).rebounding_off(within)
+    end
+
+    def draw_on(canvas) = canvas.circle(center, radius, :yellow)
+
+    # A ball past an edge turns around on that axis.
+    def rebounding_off(box)
+      across = (box.left + radius)..(box.right - radius)
+      down = (box.top + radius)..(box.bottom - radius)
+      with(velocity: Vector.new(across.cover?(center.x) ? velocity.x : -velocity.x,
+                                down.cover?(center.y) ? velocity.y : -velocity.y))
+    end
   end
 
-  def update(dt)
-    @pos += @vel * dt
-    @vel = @vel.with(x: -@vel.x) unless (0..screen.width).cover?(@pos.x)
-    @vel = @vel.with(y: -@vel.y) unless (0..screen.height).cover?(@pos.y)
-  end
+  class Game < Rbgame::Game
+    include Rbgame
 
-  def draw(screen)
-    screen.fill(Rbgame::Color::EGA[1])
-    screen.circle(@pos, 12, :yellow)
-    screen.text("Esc to quit", at: [8, 8], color: :white)
-  end
+    configure size: [640, 350], title: "Bounce", fps: 60
 
-  def on_event(event)
-    case event
-    in Rbgame::Event::KeyDown[sym: :escape] then stop
-    else super
+    def setup
+      @ball = Ball.new(center: screen.center, velocity: Vector.polar(30, 180), radius: 12)
+    end
+
+    def update(seconds) = @ball = @ball.after(seconds, within: screen.bounds)
+
+    def draw(screen)
+      screen.fill(Color::EGA[1])
+      @ball.draw_on(screen)
+      screen.text("Esc to quit", at: [8, 8])
+    end
+
+    def on_event(event)
+      case event
+      in Event::KeyDown[sym: :escape] then stop
+      else super
+      end
     end
   end
 end
 
-Bounce.run
+Bounce::Game.run
 ```
+
+That is `examples/bounce.rb`, and the test suite runs it. `include Rbgame`
+brings `Vector`, `Color`, `Event` and friends into a class's scope, as
+`include Math` does for `PI`; the ball is a value that knows how to move
+itself; the game only wires hooks to it.
 
 Or keep the loop yourself:
 
 ```ruby
 Rbgame.run(size: [320, 200], title: "Hello") do |screen|
   clock = Rbgame::Clock.new
-  loop do
-    Rbgame::Events.each { |event| break if event in Rbgame::Event::Quit }
-    screen.fill(:black).circle(screen.center, 40, "#ffff55")
-    screen.present
+  until Rbgame::Events.any?(Rbgame::Event::Quit)
+    screen.fill(:black).circle(screen.center, 40, :yellow).present
     clock.tick(60)
   end
 end
 ```
+
+`Events` is `Enumerable` over whatever has arrived, so `any?(Event::Quit)`
+drains the queue and answers the only question this loop has. Drawing calls
+return the canvas, so a frame is one chain ending in `present`.
 
 ## Status
 
@@ -139,7 +164,7 @@ everything that takes a rect accepts `Rect` or `[x, y, w, h]`.
 ```
 src/            the Rust extension: Rbgame::Native, thin and primitive
 lib/rbgame/     the Ruby API
-examples/       Gorillas
+examples/       bounce.rb (the README program) and Gorillas
 test/           minitest, headless
 sig/            RBS type signatures for the public API
 docs/           DESIGN.md (why it looks like this), UPSTREAM.md (following SDL)

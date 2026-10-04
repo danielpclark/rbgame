@@ -549,7 +549,7 @@ module Rbgame
     def running?: () -> bool
     def stop: () -> bool
     def setup: () -> void
-    def update: (Float dt) -> void
+    def update: (Float seconds) -> void
     def draw: (Screen) -> void
     def teardown: () -> void
     def on_event: (untyped event) -> void

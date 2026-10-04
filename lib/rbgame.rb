@@ -12,10 +12,11 @@
 #   require "rbgame"
 #
 #   Rbgame.run(size: [640, 350], title: "Hello") do |screen|
-#     screen.fill(:black)
-#     screen.circle(screen.center, 40, :yellow)
-#     screen.present
-#     Rbgame::Events.each { |e| break if e in Rbgame::Event::Quit }
+#     clock = Rbgame::Clock.new
+#     until Rbgame::Events.any?(Rbgame::Event::Quit)
+#       screen.fill(:black).circle(screen.center, 40, :yellow).present
+#       clock.tick(60)
+#     end
 #   end
 #
 # or subclass Rbgame::Game.
