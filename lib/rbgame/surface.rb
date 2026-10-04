@@ -9,12 +9,13 @@ module Rbgame
   #   mask.fill(:black)
   #   mask.fill_circle([32, 32], 20, :white)
   #   mask[10, 10]            # => Color
-  #   mask.save("mask.bmp")
+  #   mask.save("mask.png")
+  #   Surface.load("sprite.png")
   class Surface
     attr_reader :native
 
-    # Loads a BMP file (the format SDL reads without SDL_image).
-    def self.load(path) = new(Native.load_bmp(path.to_s))
+    # Loads a PNG, JPEG or BMP file, told apart by its contents.
+    def self.load(path) = new(Native.load_image(path.to_s))
 
     # Surface.new([w, h]) or Surface.new(w, h); also wraps a Native::Surface.
     def initialize(size_or_native, height = nil)
@@ -34,7 +35,12 @@ module Rbgame
     def pitch = native.pitch
     def format = native.format_name
 
-    def save(path) = tap { native.save_bmp(path.to_s) }
+    # Writes a PNG, or a BMP when the name ends in .bmp.
+    def save(path)
+      path = path.to_s
+      File.extname(path).casecmp?(".bmp") ? native.save_bmp(path) : native.save_png(path)
+      self
+    end
 
     # Fills `rect` (or everything) with a colour.
     def fill(color, rect = nil)

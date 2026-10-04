@@ -11,9 +11,10 @@ class DisplayTest < Minitest::Test
     @screen = RbgameTest.screen
   end
 
-  def test_headless_setup
+  def test_setup_on_the_requested_driver
     assert Rbgame.initialized?(:video)
-    assert Rbgame.headless?
+    assert_equal RbgameTest.video_driver, Rbgame::Display.driver
+    assert_equal RbgameTest.headless?, Rbgame.headless?
     assert_includes Rbgame::Display.drivers, "offscreen"
     assert_equal "software", @screen.driver
     assert_equal Vector[200, 120], @screen.size

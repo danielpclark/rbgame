@@ -34,6 +34,6 @@ class SubsystemsTest < Minitest::Test
     assert Rbgame::Subsystems.video.started?
     assert Rbgame::Subsystems.audio.started?
     assert Rbgame.initialized?(:video)
-    assert Rbgame.headless?
+    assert_equal RbgameTest.headless?, Rbgame.headless?
   end
 end

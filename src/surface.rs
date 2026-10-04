@@ -72,6 +72,11 @@ methods!(
     fn surf_load_bmp(path: RString) -> AnyObject {
         wrap(Surface::load_bmp(str_of(path)).or_raise())
     }
+
+    // BMP, PNG or JPEG, told apart by their contents.
+    fn surf_load_image(path: RString) -> AnyObject {
+        wrap(Surface::load(str_of(path)).or_raise())
+    }
 );
 
 methods!(
@@ -96,6 +101,11 @@ methods!(
 
     fn surf_save_bmp(path: RString) -> NilClass {
         rtself.surface_mut().save_bmp(str_of(path)).or_raise();
+        NilClass::new()
+    }
+
+    fn surf_save_png(path: RString) -> NilClass {
+        rtself.surface_mut().save_png(str_of(path)).or_raise();
         NilClass::new()
     }
 
@@ -242,6 +252,7 @@ methods!(
 pub fn define(native: &mut Module) {
     native.def_self("create_surface", surf_create);
     native.def_self("load_bmp", surf_load_bmp);
+    native.def_self("load_image", surf_load_image);
 
     let mut klass = native.define_nested_class("Surface", None);
     // Instances come only from Rust (`wrap_data`), never from `Surface.new`.
@@ -252,6 +263,7 @@ pub fn define(native: &mut Module) {
         klass.def("pitch", surf_pitch);
         klass.def("format_name", surf_format_name);
         klass.def("save_bmp", surf_save_bmp);
+        klass.def("save_png", surf_save_png);
         klass.def("fill_rect", surf_fill_rect);
         klass.def("clear", surf_clear);
         klass.def("blit", surf_blit);
