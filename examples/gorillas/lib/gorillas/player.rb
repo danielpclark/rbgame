@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
 module Gorillas
-  # A player: name, score, and which side of the field they play from.
+  # A player: a name, a score, and the side of the field they throw from.
   class Player
-    attr_reader :name, :side
-    attr_accessor :score
+    attr_reader :name, :side, :score
 
     def initialize(name, side:)
       @name = name
@@ -12,6 +11,7 @@ module Gorillas
       @score = 0
     end
 
+    def score! = @score += 1
     def left? = side == :left
     def facing = left? ? :right : :left
     def direction = left? ? 1 : -1

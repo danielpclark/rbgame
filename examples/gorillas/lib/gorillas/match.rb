@@ -13,7 +13,7 @@ module Gorillas
       raise ArgumentError, "play to at least 1 point" unless play_to.positive?
       raise ArgumentError, "gravity must pull downwards" unless gravity.positive?
 
-      @players = [Player.new(names[0], side: :left), Player.new(names[1], side: :right)]
+      @players = [Player.new(names[0], side: :left), Player.new(names[1], side: :right)].freeze
       @play_to = play_to
       @gravity = gravity.to_f
       @rng = rng
@@ -24,23 +24,19 @@ module Gorillas
     def right = players[1]
     def opponent_of(player) = player.equal?(left) ? right : left
     def total_points = players.sum(&:score)
+    def leader = players.max_by(&:score)
 
     def score!(player)
-      player.score += 1
+      player.score!
       @rounds += 1
     end
 
     def over? = total_points >= play_to
-    def winner = over? ? players.max_by(&:score) : nil
+    def winner = over? ? leader : nil
 
-    # Loser of the last round throws first; player 1 opens the match.
-    def opening_player
-      return left if rounds.zero?
+    # The loser of the last round throws first; player 1 opens the match.
+    def opening_player = rounds.zero? ? left : opponent_of(leader)
 
-      last_winner = players.max_by(&:score)
-      opponent_of(last_winner)
-    end
-
-    def new_round = Round.new(self)
+    def new_round(listener: Round::NO_LISTENER) = Round.new(self, listener: listener)
   end
 end

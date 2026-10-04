@@ -1,31 +1,18 @@
 # frozen_string_literal: true
 
 module Gorillas
-  # The projectile: a crescent that tumbles through four orientations as
-  # it flies, the way DrawBan cycled its four shapes.
-  module Banana
-    RADIUS = 7
-    THICKNESS = 4
+  # The projectile at an instant: where it is and how it is turned. It
+  # tumbles through four orientations as it flies, as DrawBan cycled its
+  # four shapes.
+  class Banana < Data.define(:position, :flight_time)
     FRAMES = 4
+    TUMBLE_RATE = 6 # frames per simulated second
 
-    module_function
-
-    # The crescent as a polygon, pointing left, around the origin.
-    def shape
-      @shape ||= begin
-        outer = Rbgame::Geometry.arc_points([0, 0], RADIUS, from: 90, to: 270, segments: 24)
-        inner = Rbgame::Geometry.arc_points([THICKNESS, 0], RADIUS - 1, from: 90, to: 270, segments: 24)
-        (outer + inner.reverse).freeze
-      end
+    def initialize(position:, flight_time: 0.0)
+      super(position: Rbgame::Vector.coerce(position), flight_time: flight_time)
     end
 
-    def frame_for(time) = (time * 6).floor % FRAMES
-
-    def draw(canvas, position, frame)
-      position = Rbgame::Vector.coerce(position)
-      angle = frame * 90
-      points = shape.map { |p| position + p.rotate(angle) }
-      canvas.polygon(points, Palette::BANANA)
-    end
+    def frame = (flight_time * TUMBLE_RATE).floor % FRAMES
+    def rotation = frame * 90
   end
 end

@@ -3,35 +3,37 @@
 module Gorillas
   module Scenes
     # A screen of the game. The game hands each scene events and time and
-    # asks it to draw; a scene moves on by returning the next one from
-    # `update` or `handle`.
+    # asks it to draw; a scene moves on by returning the next scene from
+    # `handle` or `update`, or nil to stay.
     class Base
       attr_reader :game
 
       def initialize(game)
         @game = game
+        @elapsed = 0.0
       end
 
-      def options = game.options
-      def match = game.match
       def enter; end
+      def leave; end
       def handle(_event) = nil
-      def update(_dt) = nil
       def draw(_canvas); end
+
+      def update(dt)
+        @elapsed += dt
+        tick(dt)
+      end
 
       private
 
-      def title(canvas, text, y:, scale: 2, color: Palette::TEXT)
-        canvas.text(text, at: [Field::WIDTH / 2, y], color: color, scale: scale, align: :center)
-      end
+      attr_reader :elapsed
 
-      def paragraph(canvas, lines, y:, color: Palette::TEXT, line_height: 12)
-        lines.each_with_index do |line, i|
-          canvas.text(line, at: [Field::WIDTH / 2, y + (i * line_height)], color: color, align: :center)
-        end
-      end
-
+      def tick(_dt) = nil
+      def options = game.options
+      def match = game.match
+      def controller = game.controller
+      def jukebox = game.jukebox
       def any_key?(event) = event.is_a?(Rbgame::Event::KeyDown) && !event.repeat?
+      def typography(canvas) = View::Typography.new(canvas)
     end
   end
 end

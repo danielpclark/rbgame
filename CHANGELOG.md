@@ -21,3 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Gorillas (`examples/gorillas`): a clone of QBasic's GORILLA.BAS, playable
   and self-playing, with the original tunes.
 - `rake sdl:check` / `rake sdl:update` to follow the SDL translation.
+
+### Changed
+- Gorillas restructured around objects: `Round` delegates to phase objects
+  (`Aiming`, `Flying`, `Exploding`, `Dancing`, `Over`), input goes through a
+  `Questionnaire` answered by a `Keyboard` or an `Autopilot` controller, the
+  `Jukebox` listens to the round instead of being called from it, sprites and
+  views draw the model instead of the model drawing itself, and the skyline is
+  built by an `Architect` under a `Slope` strategy.
