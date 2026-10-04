@@ -54,25 +54,12 @@ module Rbgame
     # that many frames (for tests and headless recordings); `screenshots:`
     # saves a BMP of every frame (or every `every`th) into a directory.
     def run(frames: nil, screenshots: nil, every: 1)
-      Rbgame.init
-      @screen = Display.set_mode(configuration[:size], title: configuration[:title],
-                                 logical: configuration[:logical], resizable: configuration[:resizable])
-      @clock = Clock.new
+      open_display
+      @recorder = FrameRecorder.for(screenshots, every: every)
+      @limit = frames
       @running = true
       setup
-
-      while @running
-        Events.each { |event| on_event(event) }
-        break unless @running
-
-        update(clock.tick(configuration[:fps]))
-        draw(screen)
-        screen.present
-        screen.screenshot(File.join(screenshots, format("frame-%05d.bmp", @frame))) if screenshots && (@frame % every).zero?
-        @frame += 1
-        stop if frames && @frame >= frames
-      end
-
+      step while running?
       teardown
       self
     ensure
@@ -94,6 +81,28 @@ module Rbgame
       when Event::Quit then stop
       when Event::Window then stop if event.close_requested?
       end
+    end
+
+    private
+
+    def open_display
+      Rbgame.init
+      @screen = Display.set_mode(configuration[:size], title: configuration[:title],
+                                 logical: configuration[:logical], resizable: configuration[:resizable])
+      @clock = Clock.new
+    end
+
+    # One frame: input, simulation, drawing, and the record of it.
+    def step
+      Events.each { |event| on_event(event) }
+      return unless running?
+
+      update(clock.tick(configuration[:fps]))
+      draw(screen)
+      screen.present
+      @recorder.record(screen, @frame)
+      @frame += 1
+      stop if @limit && @frame >= @limit
     end
   end
 end

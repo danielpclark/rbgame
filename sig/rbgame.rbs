@@ -1,0 +1,564 @@
+# Type signatures for rbgame's public API (RBS). Validated by `rake rbs:validate`.
+#
+# Anything a method accepts "as a colour / point / rect" is typed by the
+# coercible aliases below: the value objects themselves, or the plain Ruby
+# values Color.coerce, Vector.coerce and Rect.coerce turn into them.
+
+module Rbgame
+  VERSION: String
+
+  type colorish = Color | Symbol | String | [Integer, Integer, Integer] | [Integer, Integer, Integer, Integer] | Integer
+  type vectorish = Vector | [Numeric, Numeric] | { x: Numeric, y: Numeric }
+  type rectish = Rect | [Numeric, Numeric, Numeric, Numeric] | [vectorish, vectorish] | { x: Numeric, y: Numeric, w: Numeric, h: Numeric }
+  type subsystem = :video | :audio | :joystick | :haptic | :gamepad | :events
+
+  # Anything indexable by String, such as ENV.
+  interface _EnvLike
+    def []: (String) -> String?
+  end
+
+  class Error < StandardError
+  end
+  class SDLError < Error
+  end
+  class StateError < Error
+  end
+  class NativeLoadError < Error
+  end
+
+  def self.init: (?video: bool, ?audio: bool, ?driver: String?) -> singleton(Rbgame)
+  def self.initialized?: (?subsystem) -> bool
+  def self.quit: () -> singleton(Rbgame)
+  def self.run: (?size: vectorish, ?title: String, **untyped display_options) { (Screen) -> void } -> void
+  def self.headless?: () -> bool
+  def self.sdl_version: () -> String
+  def self.platform: () -> String
+  def self.ticks: () -> Float
+  def self.delay: (Numeric seconds) -> void
+
+  class Mode
+    attr_reader what: String
+    def initialize: (String what, Hash[Symbol, Integer] codes) -> void
+    def code: (Symbol | Integer name) -> Integer
+    def name: (Integer code) -> (Symbol | Integer)
+    def names: () -> Array[Symbol]
+  end
+
+  BLEND_MODES: Mode
+  SCALE_MODES: Mode
+  FLIP_MODES: Mode
+  PRESENTATION_MODES: Mode
+
+  class Color
+    attr_reader r: Integer
+    attr_reader g: Integer
+    attr_reader b: Integer
+    attr_reader a: Integer
+    def self.new: (Integer r, Integer g, Integer b, ?Integer a, ?a: Integer) -> Color
+                | (r: Integer, g: Integer, b: Integer, ?a: Integer) -> Color
+    def self.coerce: (colorish) -> Color
+    def self.[]: (colorish) -> Color
+    def self.parse: (String) -> Color
+    def self.named: (Symbol | String) -> Color
+    def self.from_rgb_int: (Integer) -> Color
+    def self.from_hsv: (Numeric hue, Numeric saturation, Numeric value, ?a: Integer) -> Color
+    def with: (?r: Integer, ?g: Integer, ?b: Integer, ?a: Integer) -> Color
+    def opaque?: () -> bool
+    def transparent?: () -> bool
+    def to_a: () -> [Integer, Integer, Integer, Integer]
+    def rgb: () -> [Integer, Integer, Integer]
+    def to_hex: () -> String
+    def lerp: (colorish other, Numeric t) -> Color
+    def lighten: (?Numeric amount) -> Color
+    def darken: (?Numeric amount) -> Color
+    def grayscale: () -> Color
+    def to_hsv: () -> [Float, Float, Float]
+
+    BLACK: Color
+    WHITE: Color
+    RED: Color
+    GREEN: Color
+    BLUE: Color
+    YELLOW: Color
+    CYAN: Color
+    MAGENTA: Color
+    ORANGE: Color
+    GRAY: Color
+    TRANSPARENT: Color
+    EGA: Array[Color]
+    NAMED: Hash[Symbol, Color]
+  end
+
+  class Vector
+    attr_reader x: Numeric
+    attr_reader y: Numeric
+    ZERO: Vector
+    def self.new: (Numeric x, Numeric y) -> Vector | (x: Numeric, y: Numeric) -> Vector
+    def self.[]: (*untyped) -> Vector
+    def self.coerce: (vectorish) -> Vector
+    def self.polar: (Numeric degrees, ?Numeric length) -> Vector
+    def self.zero: () -> Vector
+    def +: (vectorish) -> Vector
+    def -: (vectorish) -> Vector
+    def *: (Numeric | vectorish) -> Vector
+    def /: (Numeric) -> Vector
+    def -@: () -> Vector
+    def scale: (vectorish) -> Vector
+    def dot: (vectorish) -> Numeric
+    def magnitude: () -> Float
+    def length: () -> Float
+    def magnitude_squared: () -> Numeric
+    def zero?: () -> bool
+    def normalize: () -> Vector
+    def distance_to: (vectorish) -> Float
+    def angle: () -> Float
+    def rotate: (Numeric degrees) -> Vector
+    def lerp: (vectorish other, Numeric t) -> Vector
+    def round: () -> Vector
+    def floor: () -> Vector
+    def to_a: () -> [Numeric, Numeric]
+    def with: (?x: Numeric, ?y: Numeric) -> Vector
+  end
+
+  class Rect
+    attr_reader x: Numeric
+    attr_reader y: Numeric
+    attr_reader w: Numeric
+    attr_reader h: Numeric
+    def self.new: (Numeric x, Numeric y, Numeric w, Numeric h) -> Rect | (x: Numeric, y: Numeric, w: Numeric, h: Numeric) -> Rect
+    def self.[]: (*untyped) -> Rect
+    def self.coerce: (rectish) -> Rect
+    def self.from_center: (vectorish center, vectorish size) -> Rect
+    def self.at: (vectorish position, vectorish size) -> Rect
+    def self.bounding: (Array[vectorish]) -> Rect
+    def width: () -> Numeric
+    def height: () -> Numeric
+    def size: () -> Vector
+    def area: () -> Numeric
+    def empty?: () -> bool
+    def left: () -> Numeric
+    def top: () -> Numeric
+    def right: () -> Numeric
+    def bottom: () -> Numeric
+    def centerx: () -> Float
+    def centery: () -> Float
+    def position: () -> Vector
+    def topleft: () -> Vector
+    def topright: () -> Vector
+    def bottomleft: () -> Vector
+    def bottomright: () -> Vector
+    def center: () -> Vector
+    def corners: () -> Array[Vector]
+    def move: (Numeric | vectorish dx, ?Numeric? dy) -> Rect
+    def at: (vectorish) -> Rect
+    def centered_at: (vectorish) -> Rect
+    def resize: (vectorish) -> Rect
+    def inflate: (Numeric dw, ?Numeric dh) -> Rect
+    def scale_by: (Numeric fx, ?Numeric fy) -> Rect
+    def normalize: () -> Rect
+    def contains?: (rectish | vectorish) -> bool
+    def collide?: (rectish) -> bool
+    def clip: (rectish) -> Rect
+    def union: (rectish) -> Rect
+    def clamp: (rectish) -> Rect
+    def round: () -> Rect
+    def to_a: () -> [Numeric, Numeric, Numeric, Numeric]
+    def with: (?x: Numeric, ?y: Numeric, ?w: Numeric, ?h: Numeric) -> Rect
+  end
+
+  module Key
+    module Mod
+      SHIFT: Integer
+      CTRL: Integer
+      ALT: Integer
+      GUI: Integer
+      def self.shift?: (Integer) -> bool
+      def self.ctrl?: (Integer) -> bool
+      def self.alt?: (Integer) -> bool
+    end
+    def self.code: (Symbol | Integer) -> Integer
+    def self.sym: (Integer) -> Symbol
+    def self.sdl_name: (Symbol) -> String
+    def self.symbolize: (String) -> Symbol
+    def self.pressed?: (Symbol | Integer) -> bool
+    def self.pressed: () -> Array[Symbol]
+    def self.modifiers: () -> Integer
+  end
+
+  module Keyboard
+    def self.pressed?: (Symbol | Integer) -> bool
+    def self.pressed: () -> Array[Symbol]
+    def self.modifiers: () -> Integer
+    def self.shift?: () -> bool
+    def self.ctrl?: () -> bool
+    def self.alt?: () -> bool
+  end
+
+  module Mouse
+    BUTTONS: Hash[Symbol, Integer]
+    def self.position: () -> Vector
+    def self.pressed?: (Symbol) -> bool
+    def self.visible=: (bool) -> void
+    def self.visible?: () -> bool
+    def self.button_name: (Integer) -> Symbol
+  end
+
+  module Event
+    class Quit
+      attr_reader timestamp_ns: Integer
+    end
+    class KeyDown
+      attr_reader timestamp_ns: Integer
+      attr_reader window_id: Integer?
+      attr_reader key: Integer
+      attr_reader scancode: Integer
+      attr_reader name: String
+      attr_reader modifiers: Integer
+      attr_reader repeat: bool
+      def sym: () -> Symbol
+      def key?: (Symbol | Integer) -> bool
+      def char: () -> String?
+      def shift?: () -> bool
+      def ctrl?: () -> bool
+      def alt?: () -> bool
+      def repeat?: () -> bool
+    end
+    class KeyUp < KeyDown
+    end
+    class MouseDown
+      attr_reader x: Float
+      attr_reader y: Float
+      attr_reader button_number: Integer
+      attr_reader clicks: Integer
+      def pos: () -> Vector
+      def button: () -> Symbol
+      def left?: () -> bool
+      def right?: () -> bool
+      def middle?: () -> bool
+      def double_click?: () -> bool
+    end
+    class MouseUp < MouseDown
+    end
+    class MouseMotion
+      attr_reader x: Float
+      attr_reader y: Float
+      attr_reader xrel: Float
+      attr_reader yrel: Float
+      attr_reader buttons: Integer
+      def pos: () -> Vector
+      def rel: () -> Vector
+      def pressed?: (Symbol) -> bool
+    end
+    class Window
+      attr_reader event: Symbol
+      attr_reader data1: Integer
+      attr_reader data2: Integer
+      def resized?: () -> bool
+      def close_requested?: () -> bool
+      def size: () -> Vector
+    end
+    def self.from_hash: (Hash[Symbol, untyped]) -> untyped
+  end
+
+  module Events
+    extend Enumerable[untyped]
+    def self.poll: () -> untyped
+    def self.each: () { (untyped) -> void } -> singleton(Events) | () -> Enumerator[untyped, singleton(Events)]
+    def self.wait: (?timeout: Numeric?) -> untyped
+    def self.pump: () -> void
+    def self.flush: () -> void
+    def self.push_quit: () -> void
+    def self.push_user: (?Integer code) -> bool
+    def self.pending: () -> Integer
+  end
+
+  class Clock
+    attr_reader frame_time: Float
+    attr_reader frames: Integer
+    def initialize: (?smoothing: Integer) -> void
+    def tick: (?Numeric? fps) -> Float
+    def fps: () -> Float
+    def elapsed: () -> Float
+    def self.now: () -> Float
+    def self.now_ns: () -> Integer
+    def self.sleep: (Numeric seconds) -> void
+  end
+
+  class Window
+    def initialize: (?title: String, ?size: vectorish, **bool flags) -> void
+    def title: () -> String
+    def title=: (String) -> void
+    def size: () -> Vector
+    def bounds: () -> Rect
+    def resize: (vectorish) -> self
+    def show: () -> self
+    def hide: () -> self
+    def fullscreen=: (bool) -> void
+    def fullscreen?: () -> bool
+    def destroy: () -> void
+    def destroyed?: () -> bool
+  end
+
+  class Surface
+    def self.load: (path path) -> Surface
+    def initialize: (vectorish | Integer size_or_width, ?Integer? height) -> void
+    def width: () -> Integer
+    def height: () -> Integer
+    def size: () -> Vector
+    def bounds: () -> Rect
+    def save: (path path) -> self
+    def fill: (colorish, ?rectish?) -> self
+    def fill_rect: (rectish, colorish) -> self
+    def fill_circle: (vectorish center, Numeric radius, colorish) -> self
+    def []: (Numeric | vectorish x, ?Numeric? y) -> Color?
+    def []=: (Numeric | vectorish x, Numeric | colorish y, ?colorish? color) -> void
+    def blit: (Surface source, ?at: vectorish, ?source_rect: rectish?) -> self
+    def blit_scaled: (Surface source, rectish rect, ?source_rect: rectish?, ?mode: Symbol) -> self
+    def color_key=: (colorish?) -> void
+    def alpha=: (Integer) -> void
+    def alpha: () -> Integer
+    def blend_mode=: (Symbol | Integer) -> void
+    def blend_mode: () -> (Symbol | Integer)
+    def dup: () -> Surface
+    def scaled: (vectorish size, ?mode: Symbol) -> Surface
+    def rotated: (Numeric degrees) -> Surface
+    def flipped: (Symbol direction) -> Surface
+    def with_texture: (Canvas) { (Texture) -> void } -> void
+    def pixels: () -> String?
+    def pixels=: (String) -> void
+  end
+
+  class Texture
+    def width: () -> Float
+    def height: () -> Float
+    def size: () -> Vector
+    def bounds: () -> Rect
+    def alpha=: (Integer) -> void
+    def color_mod=: (colorish) -> void
+    def blend_mode=: (Symbol | Integer) -> void
+    def scale_mode=: (Symbol | Integer) -> void
+    def with_texture: (Canvas) { (Texture) -> void } -> void
+    def destroy: () -> void
+    def destroyed?: () -> bool
+  end
+
+  class Canvas
+    module Shapes
+      def pixel: (vectorish, colorish) -> self
+      def pixels: (Array[vectorish], colorish) -> self
+      def line: (vectorish from, vectorish to, colorish, ?width: Numeric) -> self
+      def lines: (Array[vectorish], colorish, ?closed: bool, ?width: Numeric) -> self
+      def fill_rect: (rectish, colorish) -> self
+      def stroke_rect: (rectish, colorish, ?width: Numeric) -> self
+      def rect: (rectish, colorish, ?fill: bool, ?width: Numeric) -> self
+      def circle: (vectorish center, Numeric radius, colorish, ?fill: bool, ?width: Numeric, ?segments: Integer?) -> self
+      def ellipse: (rectish, colorish, ?fill: bool, ?width: Numeric, ?segments: Integer?) -> self
+      def ellipse_at: (vectorish center, Numeric rx, Numeric ry, colorish, ?fill: bool, ?width: Numeric, ?segments: Integer?) -> self
+      def arc: (vectorish center, Numeric radius, Numeric from, Numeric to, colorish, ?width: Numeric, ?segments: Integer?) -> self
+      def polygon: (Array[vectorish], colorish, ?fill: bool, ?width: Numeric) -> self
+      def triangles: (Array[[vectorish, colorish]]) -> self
+    end
+
+    module Text
+      FONT_SIZE: Integer
+      def text: (untyped string, at: vectorish, ?color: colorish, ?scale: Numeric, ?align: Symbol) -> self
+      def text_width: (untyped string, ?scale: Numeric) -> Numeric
+      def text_height: (?scale: Numeric) -> Numeric
+    end
+
+    module Images
+      def texture: (Surface) -> Texture
+      def target_texture: (vectorish size) -> Texture
+      def draw: (Surface | Texture image, ?at: vectorish?, ?rect: rectish?, ?source: rectish?, ?angle: Numeric, ?center: vectorish?, ?flip: Symbol, ?alpha: Integer?) -> self
+      def with_target: (Texture) { (Canvas) -> void } -> void
+    end
+
+    include Shapes
+    include Text
+    include Images
+
+    def output_size: () -> Vector
+    def size: () -> Vector
+    def width: () -> Numeric
+    def height: () -> Numeric
+    def bounds: () -> Rect
+    def center: () -> Vector
+    def fill: (colorish) -> self
+    def clear: (colorish) -> self
+    def clip: (rectish) { (Canvas) -> void } -> void
+    def blend_mode=: (Symbol | Integer) -> void
+    def blend_mode: () -> (Symbol | Integer)
+    def logical_size=: (vectorish?) -> void
+    def set_logical_size: (vectorish, ?mode: Symbol) -> void
+    def from_window: (vectorish) -> Vector
+    def to_surface: (?rectish?) -> Surface
+    def screenshot: (path path) -> Surface
+  end
+
+  class Screen < Canvas
+    attr_reader window: Window
+    def present: () -> self
+    def flip: () -> self
+    def title: () -> String
+    def title=: (String) -> void
+    def window_size: () -> Vector
+    def vsync=: (bool | Integer) -> void
+    def driver: () -> String
+  end
+
+  module Display
+    def self.set_mode: (?vectorish size, ?title: String, ?logical: vectorish?, ?vsync: (bool | Integer)?, ?driver: String?, **bool window_options) -> Screen
+    def self.open: (?vectorish size, ?title: String, ?logical: vectorish?, ?vsync: (bool | Integer)?, ?driver: String?, **bool window_options) -> Screen
+    def self.screen: () -> Screen
+    def self.open?: () -> bool
+    def self.close: () -> void
+    def self.drivers: () -> Array[String]
+    def self.driver: () -> String?
+  end
+
+  class Sound
+    attr_reader pcm: String
+    attr_reader rate: Integer
+    attr_reader channels: Integer
+    def self.load: (path path) -> Sound
+    def self.from_samples: (Enumerable[Numeric], ?rate: Integer, ?channels: Integer) -> Sound
+    def self.silence: (Numeric seconds, ?rate: Integer, ?channels: Integer) -> Sound
+    def initialize: (String pcm, rate: Integer, ?channels: Integer) -> void
+    def frames: () -> Integer
+    def duration: () -> Float
+    def empty?: () -> bool
+    def +: (Sound) -> Sound
+    def play: (?Mixer) -> bool
+    def to_samples: () -> Array[Float]
+  end
+
+  class Mixer
+    RATE: Integer
+    CHANNELS: Integer
+
+    interface _Output
+      def queue: (String pcm, Integer rate, Integer channels) -> void
+      def queued_bytes: () -> Integer
+      def clear: () -> void
+      def pause: () -> void
+      def resume: () -> void
+      def gain=: (Float) -> void
+    end
+
+    class Silence
+      include _Output
+    end
+
+    def self.default: () -> Mixer
+    def self.close: () -> void
+    def self.available?: () -> bool
+    def self.play: (Sound) -> bool
+    def self.stop: () -> Mixer
+    def self.volume=: (Numeric) -> void
+    def self.queued: () -> Float
+    def self.playing?: () -> bool
+
+    attr_reader output: _Output
+    def initialize: (output: _Output) -> void
+    def available?: () -> bool
+    def play: (Sound) -> bool
+    def stop: () -> self
+    def pause: () -> self
+    def resume: () -> self
+    def volume=: (Numeric) -> void
+    def queued: () -> Float
+    def playing?: () -> bool
+  end
+
+  class Synth
+    RATE: Integer
+    AMPLITUDE: Float
+
+    class Note
+      attr_reader frequency: Float?
+      attr_reader seconds: Float
+      attr_reader sounding: Float
+      def rest?: () -> bool
+    end
+
+    class Score
+      attr_reader notes: Array[Note]
+      def initialize: (String) -> void
+    end
+
+    class SquareWave
+      include Enumerable[Float]
+      def initialize: (frequency: Float?, rate: Integer, seconds: Float, sounding: Float) -> void
+      def each: () { (Float) -> void } -> void | () -> Enumerator[Float, void]
+    end
+
+    attr_reader score: Score
+    def self.play: (String, ?rate: Integer) -> Sound
+    def initialize: (String) -> void
+    def notes: () -> Array[Note]
+    def duration: () -> Float
+    def each_sample: (?Integer rate) -> Enumerator::Lazy[Float, void]
+    def samples: (?Integer rate) -> Array[Float]
+    def to_sound: (?rate: Integer) -> Sound
+  end
+
+  module VideoDriver
+    HEADLESS: Array[String]
+    FALLBACK: String
+    def self.choose: (requested: String?, available: Array[String], ?env: _EnvLike) -> String?
+    def self.headless?: (String?) -> bool
+  end
+
+  module Subsystems
+    class Subsystem
+      attr_reader name: Symbol
+      def started?: () -> bool
+      def start: (?driver: String?) -> self
+      def stop: () -> self
+    end
+    class Video < Subsystem
+      def driver: () -> String?
+      def headless?: () -> bool
+    end
+    class Audio < Subsystem
+    end
+    def self.video: () -> Video
+    def self.audio: () -> Audio
+    def self.[]: (Symbol) -> Subsystem
+  end
+
+  class FrameRecorder
+    class Nothing
+      def record: (untyped screen, Integer frame) -> self
+    end
+    def self.for: (String? directory, ?every: Integer) -> (FrameRecorder | Nothing)
+    def initialize: (String directory, ?every: Integer) -> void
+    def record: (untyped screen, Integer frame) -> self
+    def path_for: (Integer frame) -> String
+  end
+
+  class Game
+    DEFAULTS: Hash[Symbol, untyped]
+    def self.configure: (**untyped) -> Hash[Symbol, untyped]
+    def self.configuration: () -> Hash[Symbol, untyped]
+    def self.run: (?frames: Integer?, ?screenshots: String?, ?every: Integer) -> Game
+    attr_reader screen: Screen
+    attr_reader clock: Clock
+    attr_reader frame: Integer
+    def run: (?frames: Integer?, ?screenshots: String?, ?every: Integer) -> self
+    def running?: () -> bool
+    def stop: () -> bool
+    def setup: () -> void
+    def update: (Float dt) -> void
+    def draw: (Screen) -> void
+    def teardown: () -> void
+    def on_event: (untyped event) -> void
+  end
+
+  module Geometry
+    def self.arc_points: (vectorish center, Numeric rx, ?Numeric ry, ?from: Numeric, ?to: Numeric, ?segments: Integer?) -> Array[Vector]
+    def self.segments_for: (Numeric radius) -> Integer
+    def self.triangulate: (Array[vectorish]) -> Array[[Integer, Integer, Integer]]
+    def self.thick_line: (vectorish from, vectorish to, Numeric width) -> Array[Vector]
+  end
+end

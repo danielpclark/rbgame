@@ -11,7 +11,7 @@ class EventsTest < Minitest::Test
     # Opening the audio device makes SDL announce the devices it found, a
     # moment later and from its own thread; open it first and wait for the
     # queue to go quiet, so those announcements can't land mid-test.
-    Rbgame::Mixer.open
+    Rbgame::Mixer.default
     nil while Events.wait(timeout: 0.05)
   end
 

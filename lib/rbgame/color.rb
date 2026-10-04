@@ -69,20 +69,8 @@ module Rbgame
 
       # Hue 0..360, saturation and value 0..1.
       def from_hsv(hue, saturation, value, a: 255)
-        h = (hue % 360) / 60.0
-        c = value * saturation
-        x = c * (1 - ((h % 2) - 1).abs)
-        m = value - c
-        r, g, b =
-          case h.floor
-          when 0 then [c, x, 0]
-          when 1 then [x, c, 0]
-          when 2 then [0, c, x]
-          when 3 then [0, x, c]
-          when 4 then [x, 0, c]
-          else [c, 0, x]
-          end
-        new(((r + m) * 255).round, ((g + m) * 255).round, ((b + m) * 255).round, a: a)
+        r, g, b = Color::HSV.to_rgb(hue, saturation, value)
+        new((r * 255).round, (g * 255).round, (b * 255).round, a: a)
       end
 
       def channel(value, name)
@@ -114,21 +102,36 @@ module Rbgame
     def grayscale = self.class.new(*([(0.299 * r) + (0.587 * g) + (0.114 * b)] * 3), a: a)
 
     # Hue 0..360, saturation 0..1, value 0..1.
-    def to_hsv
-      max, min = rgb.max / 255.0, rgb.min / 255.0
-      delta = max - min
-      hue =
-        if delta.zero? then 0.0
-        elsif max == r / 255.0 then 60 * (((g - b) / 255.0 / delta) % 6)
-        elsif max == g / 255.0 then 60 * (((b - r) / 255.0 / delta) + 2)
-        else 60 * (((r - g) / 255.0 / delta) + 4)
-        end
-      [hue, max.zero? ? 0.0 : delta / max, max]
-    end
-
+    def to_hsv = Color::HSV.from_rgb(r / 255.0, g / 255.0, b / 255.0)
   end
 
   class Color
+    # The arithmetic of the HSV colour model, on 0..1 channels.
+    module HSV
+      module_function
+
+      def to_rgb(hue, saturation, value)
+        h = (hue % 360) / 60.0
+        c = value * saturation
+        x = c * (1 - ((h % 2) - 1).abs)
+        m = value - c
+        r, g, b = [[c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x]][h.floor]
+        [r + m, g + m, b + m]
+      end
+
+      def from_rgb(r, g, b)
+        max = [r, g, b].max
+        delta = max - [r, g, b].min
+        hue =
+          if delta.zero? then 0.0
+          elsif max == r then 60 * (((g - b) / delta) % 6)
+          elsif max == g then 60 * (((b - r) / delta) + 2)
+          else 60 * (((r - g) / delta) + 4)
+          end
+        [hue, max.zero? ? 0.0 : delta / max, max]
+      end
+    end
+
     HEX = /\A#?(?<r>\h{2})(?<g>\h{2})(?<b>\h{2})(?<a>\h{2})?\z/
     SHORT_HEX = /\A#?(?<r>\h)(?<g>\h)(?<b>\h)\z/
 

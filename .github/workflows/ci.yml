@@ -31,6 +31,8 @@ jobs:
         run: bundle exec rake test
       - name: Test the Gorillas demo
         run: bundle exec rake gorillas:test
+      - name: Validate the type signatures
+        run: bundle exec rake rbs:validate
       - name: Run Gorillas unattended for 300 frames
         run: bundle exec rake gorillas:record FRAMES=300 DIR=tmp/frames
       - name: Clippy
