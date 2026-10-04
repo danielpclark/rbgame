@@ -6,9 +6,9 @@ module Rbgame
   #   class Pong < Rbgame::Game
   #     configure size: [640, 480], title: "Pong", fps: 60
   #
-  #     def setup        = @ball = Vector[320, 240]
-  #     def update(dt)   = @ball += @velocity * dt
-  #     def draw(screen) = screen.circle(@ball, 6, :white)
+  #     def setup           = @ball = Ball.new(center: screen.center, velocity: Vector.polar(45, 200))
+  #     def update(seconds) = @ball = @ball.after(seconds)
+  #     def draw(screen)    = @ball.draw_on(screen)
   #
   #     def on_event(event)
   #       case event
@@ -20,8 +20,9 @@ module Rbgame
   #
   #   Pong.run
   #
-  # The default on_event stops the game on Quit and on the window's close
-  # button; call super from an override to keep that.
+  # `update` receives the seconds since the last frame. The default `on_event`
+  # stops the game on Quit and on the window's close button; call super from
+  # an override to keep that. See examples/bounce.rb for a whole program.
   class Game
     DEFAULTS = { size: [640, 480], title: "rbgame", fps: 60, logical: nil, resizable: false }.freeze
 
@@ -72,7 +73,7 @@ module Rbgame
 
     # Hooks, in call order.
     def setup; end
-    def update(dt); end
+    def update(seconds); end
     def draw(screen); end
     def teardown; end
 
