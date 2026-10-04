@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 module Gorillas
-  # A growing circle of fire that leaves a crater its own size. It is a
-  # plain object with time in it, advanced by Round.
+  # A circle of fire that grows to its full size, lingers a moment, and
+  # leaves a crater that size.
   class Explosion
     GROWTH = 90.0 # pixels per second
+    LINGER = 0.25
     BUILDING_RADIUS = 16
     GORILLA_RADIUS = 36
 
@@ -14,24 +15,20 @@ module Gorillas
       @center = Rbgame::Vector.coerce(center)
       @max_radius = max_radius
       @radius = 0.0
-      @fade = 0.0
+      @lingered = 0.0
     end
 
     def update(dt)
-      if @radius < max_radius
-        @radius = [@radius + (GROWTH * dt), max_radius].min
+      if grown?
+        @lingered += dt
       else
-        @fade += dt
+        @radius = [@radius + (GROWTH * dt), max_radius].min
       end
       self
     end
 
     def grown? = @radius >= max_radius
-    def finished? = grown? && @fade >= 0.25
-
-    def draw(canvas)
-      canvas.circle(center, radius, Palette::EXPLOSION)
-      canvas.circle(center, radius * 0.5, Palette::EXPLOSION_CORE) if radius > 4
-    end
+    def finished? = grown? && @lingered >= LINGER
+    def crater_radius = max_radius
   end
 end

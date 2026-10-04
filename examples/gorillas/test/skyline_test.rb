@@ -26,9 +26,9 @@ class SkylineTest < Minitest::Test
 
   def test_windows_stay_inside_their_building
     Skyline.generate(rng: Random.new(5)).each do |building|
-      building.window_rects.each do |rect, lit|
-        assert building.rect.contains?(rect), "#{rect} outside #{building.rect}"
-        assert_includes [true, false], lit
+      building.windows.each do |window|
+        assert building.rect.contains?(window.rect), "#{window.rect} outside #{building.rect}"
+        assert_includes [Gorillas::Palette::WINDOW_LIT, Gorillas::Palette::WINDOW_DARK], window.color
       end
     end
   end
@@ -44,5 +44,20 @@ class SkylineTest < Minitest::Test
     skyline = Skyline.generate(rng: Random.new(3))
     building = skyline.buildings[2]
     assert_equal building, skyline.building_under(building.center_x)
+  end
+
+  def test_gorilla_roofs_are_near_the_ends
+    skyline = Skyline.generate(rng: Random.new(3))
+    left, right = skyline.gorilla_roofs(Random.new(1))
+    assert_operator left.x, :<, Field::WIDTH / 2
+    assert_operator right.x, :>, Field::WIDTH / 2
+    assert_equal skyline.building_under(left.x).top, left.y
+  end
+
+  def test_every_slope_builds_a_city
+    Skyline::Slope::ALL.each do |slope|
+      buildings = Skyline::Architect.new(slope, Random.new(2)).to_a
+      assert_operator buildings.length, :>=, 5, slope.name.to_s
+    end
   end
 end

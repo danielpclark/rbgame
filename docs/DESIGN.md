@@ -68,7 +68,9 @@ the same on a developer's desktop and in CI.
 
 ## The demo is the proof
 
-`examples/gorillas` keeps its model (`Skyline`, `Terrain`, `Shot`, `Round`,
-`Match`, `Autoplayer`) free of drawing and input, with scenes on top. The
-model has its own tests; the game is playable, and plays itself for
-recordings.
+`examples/gorillas` keeps its model (`Skyline`, `Terrain`, `Shot`, `Round`
+and its phase objects, `Match`, `Autoplayer`) free of drawing and input.
+Views draw it, a `Questionnaire` collects input from whichever controller is
+at the keyboard (a person, or an `Autopilot` typing the autoplayer's aim),
+and a `Jukebox` listens to the round for things worth hearing. The model has
+its own tests; the game is playable, and plays itself for recordings.

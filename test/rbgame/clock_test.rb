@@ -7,8 +7,11 @@ class ClockTest < Minitest::Test
     clock = Rbgame::Clock.new
     started = Rbgame::Clock.now
     5.times { clock.tick(100) }
+    # The guarantee is a floor: a frame lasts at least 1/fps. A busy CI
+    # runner can make frames longer, never shorter.
     assert_operator Rbgame::Clock.now - started, :>=, 0.045
-    assert_in_delta 100, clock.fps, 25
+    assert_operator clock.fps, :<=, 110
+    assert_operator clock.fps, :>, 0
     assert_equal 5, clock.frames
     assert_operator clock.frame_time, :>, 0
   end

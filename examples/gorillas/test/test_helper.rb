@@ -10,8 +10,6 @@ require "minitest/autorun"
 require "tmpdir"
 require "gorillas"
 
-Gorillas::Sounds.enabled = false
-
 module GorillasTest
   # A match on a known city: same seed, same skyline, same wind.
   def self.match(seed: 42, **options)
@@ -21,5 +19,22 @@ module GorillasTest
   # Terrain is a Surface, so SDL must be up.
   def self.init!
     Rbgame.init
+  end
+
+  # A KeyDown event for a key named by Symbol, or for a typed character.
+  def self.key(sym, char = nil, shift: false)
+    name = char || sym.to_s.capitalize
+    code = char ? char.ord : Rbgame::Key.code(sym)
+    Rbgame::Event::KeyDown.new(timestamp_ns: 0, window_id: 1, key: code, scancode: 0, name: name,
+                               modifiers: shift ? Rbgame::Key::Mod::LSHIFT : 0, repeat: false)
+  end
+
+  # Runs a round until the block is satisfied, or fails.
+  def self.run_until(round, seconds: 60, dt: 1 / 30.0)
+    (seconds / dt).to_i.times do
+      round.update(dt)
+      return round if yield(round)
+    end
+    raise "round never reached the expected phase (#{round.phase.class})"
   end
 end
