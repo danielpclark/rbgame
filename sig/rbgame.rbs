@@ -414,6 +414,7 @@ module Rbgame
     def self.close: () -> void
     def self.drivers: () -> Array[String]
     def self.driver: () -> String?
+    def self.renderers: () -> Array[String]
   end
 
   class Sound

@@ -16,9 +16,14 @@ class DisplayTest < Minitest::Test
     assert_equal RbgameTest.video_driver, Rbgame::Display.driver
     assert_equal RbgameTest.headless?, Rbgame.headless?
     assert_includes Rbgame::Display.drivers, "offscreen"
-    assert_equal "software", @screen.driver
+    assert_includes Rbgame::Display.renderers, @screen.driver
     assert_equal Vector[200, 120], @screen.size
     assert_equal "rbgame tests", @screen.title
+  end
+
+  def test_set_mode_honors_a_requested_renderer
+    assert_equal "software", Rbgame::Display.renderers.last
+    assert_equal "software", RbgameTest.reopen_screen(driver: "software").driver
   end
 
   def test_primitives_land_where_drawn

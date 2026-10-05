@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `rake sdl:check` / `rake sdl:update` to follow the SDL translation.
 
 ### Changed
+- SDL translation updated to `d4e95a8c` (40 upstream commits): the Wayland
+  video driver; the OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 renderers,
+  which SDL now prefers over `software` on a window with a display
+  (`Display.renderers` lists them, `Display.set_mode(driver: "software")`
+  opts out); HIDAPI gamepad drivers, haptics, GameInput and camera drivers
+  in the crate.
 - SDL translation updated to `dc9c4a48` (90 upstream commits): the X11 and
   Windows video drivers, so rbgame opens a real window on X11 (the suites run
   on it under Xvfb in CI); ALSA, PulseAudio, PipeWire and WASAPI audio

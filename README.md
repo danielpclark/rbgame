@@ -97,21 +97,26 @@ return the canvas, so a frame is one chain ending in `present`.
 Early, and honest about it. The SDL translation now has its first platform
 backends, and rbgame uses them as they land:
 
-* **Windows on screen**: the X11 driver (Linux) and the Windows driver are
-  translated. On X11, rbgame opens a real window; the test suite runs on it
-  under Xvfb in CI, so what works headless is also checked on a display. The
-  Windows driver has not been tried by this project yet. Wayland and macOS
-  are still to come upstream; on a machine without a usable driver rbgame
+* **Windows on screen**: the X11 and Wayland drivers (Linux) and the Windows
+  driver are translated. On X11, rbgame opens a real window; the test suite
+  runs on it under Xvfb in CI, so what works headless is also checked on a
+  display. Wayland and Windows have not been tried by this project yet. macOS
+  is still to come upstream; on a machine without a usable driver rbgame
   falls back to SDL's `offscreen` driver, draws into a framebuffer, and can
   read it back (`screen.to_surface`, `screen.screenshot`), which is how the
   rest of the tests and the Gorillas recorder run.
+* **Drawing**: SDL's OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 renderers
+  are translated, and SDL picks the first that works on the window (OpenGL
+  on X11 with Mesa, which is what CI runs on). `Display.set_mode(driver:
+  "software")` asks for the software renderer instead; `Display.renderers`
+  lists the choices.
 * **Sound**: ALSA, PulseAudio, PipeWire and WASAPI drivers are translated.
   With no device, `Mixer` is silent rather than broken.
 * **Images**: `Surface.load` reads PNG, JPEG and BMP; `Surface#save` writes
   PNG (or BMP by extension).
-* **Still missing upstream**: GPU renderers (everything is SDL's software
-  renderer, which is plenty for 2D), fonts beyond SDL's 8x8 debug font, and
-  gamepad input through rbgame's API.
+* **Still missing upstream**: fonts beyond SDL's 8x8 debug font, and the
+  macOS backends. Gamepads (HIDAPI, evdev and Windows drivers) and cameras
+  are in the crate but not yet in rbgame's API.
 
 `docs/UPSTREAM.md` explains how rbgame follows that project.
 

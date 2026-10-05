@@ -23,4 +23,11 @@ module RbgameTest
       Rbgame::Display.set_mode([200, 120], title: "rbgame tests")
     end
   end
+
+  # The same screen opened with other options; `screen` reopens the usual
+  # one afterwards, so tests stay independent of each other.
+  def self.reopen_screen(**options)
+    @screen = nil
+    Rbgame::Display.set_mode([200, 120], title: "rbgame tests", **options)
+  end
 end

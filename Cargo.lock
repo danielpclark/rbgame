@@ -36,7 +36,7 @@ dependencies = [
 [[package]]
 name = "sdl3"
 version = "3.5.0"
-source = "git+https://github.com/danielpclark/SDL?rev=dc9c4a48bd93d135de6e16e7c805b329670c1e0d#dc9c4a48bd93d135de6e16e7c805b329670c1e0d"
+source = "git+https://github.com/danielpclark/SDL?rev=d4e95a8cb71a454ac83e2ba85fdce3ceee71f39a#d4e95a8cb71a454ac83e2ba85fdce3ceee71f39a"
 dependencies = [
  "libc",
  "windows-sys",

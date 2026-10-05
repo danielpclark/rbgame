@@ -36,7 +36,9 @@ module Rbgame
   module Display
     class << self
       # Opens the window and returns the Screen. `logical:` sets a
-      # resolution independent of the window size (letterboxed).
+      # resolution independent of the window size (letterboxed). `driver:`
+      # names a renderer from `Display.renderers`; by default SDL takes the
+      # first one that works on this window (a GPU one when it has a display).
       def set_mode(size = [640, 480], title: "rbgame", logical: nil, vsync: nil, driver: nil, **window_options)
         Rbgame.init unless Rbgame.initialized?(:video)
         close if @screen
@@ -64,6 +66,9 @@ module Rbgame
       # Names of the video drivers this build of SDL has.
       def drivers = Native.video_drivers
       def driver = Native.current_video_driver
+
+      # Names of the renderers, in SDL's order of preference.
+      def renderers = Native.render_drivers
     end
   end
 end

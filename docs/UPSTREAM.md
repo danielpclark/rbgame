@@ -30,27 +30,33 @@ the schedule), so a stale pin gets noticed.
 The translation's `README.md` and `docs/ROADMAP.md` list what is done. What
 has arrived so far, and what rbgame did about it:
 
-* **Platform video backends.** X11 (Linux) and Windows are translated.
-  `Rbgame.init` lets SDL pick a driver when a real one exists and falls back
-  to `offscreen` only when none can start (`VideoDriver.choose` and
-  `Subsystems::Video`), so the X11 driver was picked up with no code change;
-  CI runs the suites on it under Xvfb. Still to come: Wayland, Cocoa, the
-  mobile and console backends. When Wayland lands, nothing should need to
-  change here either.
+* **Platform video backends.** X11, Wayland (Linux) and Windows are
+  translated. `Rbgame.init` lets SDL pick a driver when a real one exists and
+  falls back to `offscreen` only when none can start (`VideoDriver.choose`
+  and `Subsystems::Video`), so X11 and Wayland were picked up with no code
+  change; CI runs the suites on X11 under Xvfb. Still to come: Cocoa, the
+  mobile and console backends.
+* **GPU renderers.** OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 (Windows)
+  are translated and come before `software` in SDL's list, so a window on a
+  display now draws through the GPU (OpenGL on Mesa's llvmpipe under Xvfb in
+  CI, where the suites pass pixel for pixel as they did in software).
+  `Display.set_mode(driver: ...)` still passes a renderer name through, and
+  `Display.renderers` lists them; headless `offscreen` windows keep the
+  software renderer unless Mesa's EGL is installed.
 * **Audio drivers.** ALSA, PulseAudio, PipeWire and WASAPI. `Mixer.default`
   opens the default device; with none it is `Mixer::Silence`.
 * **Image codecs.** PNG and JPEG (stb_image and miniz translated), so
   `Surface.load` reads them and `Surface#save` writes PNG.
-* **Input.** Linux evdev and Windows joystick drivers exist in the crate;
-  rbgame has no gamepad API yet. Keyboard and mouse arrive through the same
-  event queue rbgame already drains, so they work on X11 as they did
-  headless.
+* **Input.** The HIDAPI gamepad drivers (Xbox, PlayStation, Nintendo, Steam
+  and many more), Linux evdev, Windows GameInput/RawInput/WGI, the haptic
+  drivers and the V4L2, PipeWire and Media Foundation camera drivers exist
+  in the crate; rbgame has no gamepad or camera API yet. Keyboard and mouse
+  arrive through the same event queue rbgame already drains, so they work
+  on a display as they did headless.
 
 Still worth watching:
 
-* **GPU renderers** (OpenGL, Vulkan, Metal). `Display.set_mode(driver: ...)`
-  passes a renderer name through; the default stays SDL's choice, today the
-  software renderer.
+* **Metal and the GPU renderer** for macOS, once the Cocoa backend lands.
 * **SDL_ttf** for real fonts; `Canvas#text` uses SDL's 8x8 debug font until
   then.
 
