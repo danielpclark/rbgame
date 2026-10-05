@@ -57,7 +57,9 @@ jobs:
       - name: Build the extension
         run: bundle exec rake rutie:build
       - name: Which video driver and renderer did SDL pick?
-        run: xvfb-run -a -s "-screen 0 1280x800x24" bundle exec ruby -Ilib -rrbgame -e 'Rbgame.init; screen = Rbgame::Display.set_mode([8, 8]); puts "#{Rbgame::Display.driver} window, #{screen.driver} renderer"'
+        # A block scalar: in a plain one YAML would read " #{" as a comment.
+        run: |
+          xvfb-run -a -s "-screen 0 1280x800x24" bundle exec ruby -Ilib -rrbgame -e 'Rbgame.init; screen = Rbgame::Display.set_mode([8, 8]); puts "#{Rbgame::Display.driver} window, #{screen.driver} renderer"'
       - name: Test on the real X11 driver
         run: xvfb-run -a -s "-screen 0 1280x800x24" bundle exec rake test gorillas:test
 
