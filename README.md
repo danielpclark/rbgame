@@ -97,21 +97,34 @@ return the canvas, so a frame is one chain ending in `present`.
 Early, and honest about it. The SDL translation now has its first platform
 backends, and rbgame uses them as they land:
 
-* **Windows on screen**: the X11 driver (Linux) and the Windows driver are
-  translated. On X11, rbgame opens a real window; the test suite runs on it
-  under Xvfb in CI, so what works headless is also checked on a display. The
-  Windows driver has not been tried by this project yet. Wayland and macOS
-  are still to come upstream; on a machine without a usable driver rbgame
+* **Windows on screen**: the X11 and Wayland drivers (Linux) and the Windows
+  driver are translated. On X11, rbgame opens a real window; the test suite
+  runs on it under Xvfb in CI, so what works headless is also checked on a
+  display. Wayland and Windows have not been tried by this project yet. macOS
+  is still to come upstream; on a machine without a usable driver rbgame
   falls back to SDL's `offscreen` driver, draws into a framebuffer, and can
   read it back (`screen.to_surface`, `screen.screenshot`), which is how the
   rest of the tests and the Gorillas recorder run.
+* **Drawing**: SDL's OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 renderers
+  are translated, and SDL picks the first that works on the window (OpenGL
+  on X11 with Mesa, which is what CI runs on). `Display.set_mode(driver:
+  "software")` asks for the software renderer instead; `Display.renderers`
+  lists the choices.
 * **Sound**: ALSA, PulseAudio, PipeWire and WASAPI drivers are translated.
   With no device, `Mixer` is silent rather than broken.
 * **Images**: `Surface.load` reads PNG, JPEG and BMP; `Surface#save` writes
   PNG (or BMP by extension).
-* **Still missing upstream**: GPU renderers (everything is SDL's software
-  renderer, which is plenty for 2D), fonts beyond SDL's 8x8 debug font, and
-  gamepad input through rbgame's API.
+* **Gamepads**: SDL's gamepad layer (HIDAPI drivers for Xbox, PlayStation,
+  Nintendo and Steam controllers, Linux evdev, Windows GameInput) behind
+  `Gamepad`: one layout for every pad, sticks as Vectors, rumble, and
+  events. `Gamepad::Virtual` is a pretend pad for tests, which is how the
+  suite covers it without hardware.
+* **Cameras**: the V4L2 and PipeWire (Linux) and Media Foundation (Windows)
+  drivers behind `Camera`: `Camera.open` gives the first webcam, or a null
+  object without one, and `frame` hands back each new picture as a
+  `Surface`. The clipboard and touch events are wrapped too.
+* **Still missing upstream**: fonts beyond SDL's 8x8 debug font, the macOS
+  backends, platform sensors and power status (only dummy drivers so far).
 
 `docs/UPSTREAM.md` explains how rbgame follows that project.
 
@@ -161,8 +174,11 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Canvas` | `fill`, `fill_rect`, `stroke_rect`, `line` (any width), `lines`, `circle`, `ellipse`, `arc`, `polygon` (concave too), `text`, `draw(texture, at:/rect:, angle:, flip:)`, `clip { }`, `with_target(texture) { }`, `to_surface` |
 | `Surface` | CPU pixels: `fill`, `fill_circle`, `[x, y]`, `blit`, `scaled`, `rotated`, `flipped`, `color_key=`, `save`/`Surface.load` (PNG, JPEG, BMP) |
 | `Texture` | a `Surface` uploaded for fast drawing; `alpha=`, `color_mod=`, `blend_mode=` |
-| `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `Window`, ... are `Data` |
+| `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `FingerDown`, `Window`, ... are `Data` |
 | `Key`, `Keyboard`, `Mouse` | `Key.code(:space)`, `Keyboard.pressed?(:left)`, `Mouse.position` |
+| `Gamepad` | `Gamepad.first` (or `Gamepad::None`), `pressed?(:south)`, `left_stick`, `trigger(:right)`, `rumble`; `Event::GamepadButtonDown[button: :start]`; `Gamepad::Virtual` for tests |
+| `Camera` | `Camera.open(size: [640, 480])` (or `Camera::None`), `frame` → `Surface`, `approved?`; `Event::CameraApproved` |
+| `Clipboard` | `Clipboard.text`, `Clipboard.text=`; `Event::ClipboardUpdate` |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
 | `Sound`, `Mixer`, `Synth` | WAV or sample playback (`Mixer.default`, or your own with any output); `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |

@@ -6,22 +6,8 @@ use rutie::{AnyObject, Array, Boolean, Fixnum, Module, NilClass, Object, RString
 use sdl3::init::InitFlags;
 use sdl3::{hints, init, timer, video};
 
-use crate::support::{i64_of, str_of, OrRaise};
+use crate::support::{i64_of, opt_string, str_of, strings, OrRaise};
 
-fn strings(values: impl IntoIterator<Item = String>) -> Array {
-    let mut array = Array::new();
-    for value in values {
-        array.push(RString::new_utf8(&value));
-    }
-    array
-}
-
-fn opt_string(value: Option<String>) -> AnyObject {
-    match value {
-        Some(value) => RString::new_utf8(&value).to_any_object(),
-        None => NilClass::new().to_any_object(),
-    }
-}
 
 methods!(
     AnyObject,

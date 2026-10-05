@@ -21,8 +21,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Gorillas (`examples/gorillas`): a clone of QBasic's GORILLA.BAS, playable
   and self-playing, with the original tunes.
 - `rake sdl:check` / `rake sdl:update` to follow the SDL translation.
+- `Rbgame::Gamepad`: SDL's gamepad layer with named buttons (`:south`,
+  `:dpad_left`, ...) and axes, sticks as `Vector`s with a dead zone,
+  triggers from 0 to 1, rumble and LED, `Gamepad.first` with
+  `Gamepad::None` when nothing is plugged in; `Event::GamepadAdded`,
+  `GamepadRemoved`, `GamepadButtonDown`/`Up` and `GamepadAxisMotion`;
+  `Gamepad::Virtual`, a pretend pad for tests and demos.
+
+### Fixed
+- `Events.each` (and so `Events.any?`, `to_a`, `grep`) yields everything
+  queued: an `Events.wait` that returned an event left SDL's cycle-ending
+  sentinel behind, and the next drain stopped at it before anything pushed
+  since, such as the Quit in the README's loop.
 
 ### Changed
+- SDL translation updated to `67182975` (2 upstream commits): the GPU API
+  front end, which rbgame does not use (the 2D renderer is its drawing
+  model).
+- SDL translation updated to `d4e95a8c` (40 upstream commits): the Wayland
+  video driver; the OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 renderers,
+  which SDL now prefers over `software` on a window with a display
+  (`Display.renderers` lists them, `Display.set_mode(driver: "software")`
+  opts out); HIDAPI gamepad drivers, haptics, GameInput and camera drivers
+  in the crate.
 - SDL translation updated to `dc9c4a48` (90 upstream commits): the X11 and
   Windows video drivers, so rbgame opens a real window on X11 (the suites run
   on it under Xvfb in CI); ALSA, PulseAudio, PipeWire and WASAPI audio

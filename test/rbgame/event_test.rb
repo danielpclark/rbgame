@@ -36,6 +36,18 @@ class EventTest < Minitest::Test
     assert_equal :space, matched
   end
 
+  def test_touch_events_are_fractions_of_the_window
+    event = Event.from_hash(type: :finger_motion, timestamp_ns: 1, window_id: 1, touch_id: 2, finger_id: 3,
+                            x: 0.5, y: 0.25, dx: 0.01, dy: -0.02, pressure: 1.0)
+    assert_instance_of Event::FingerMotion, event
+    assert_equal Rbgame::Vector[0.5, 0.25], event.pos
+    assert_equal Rbgame::Vector[0.01, -0.02], event.rel
+    case event
+    in Event::FingerMotion[pos:, finger_id: 3] then assert_equal 0.5, pos.x
+    end
+    assert_instance_of Event::FingerDown, Event.from_hash(type: :finger_down, timestamp_ns: 1, touch_id: 2, finger_id: 3, x: 0.0, y: 0.0, dx: 0.0, dy: 0.0, pressure: 1.0)
+  end
+
   def test_mouse_events
     event = Event.from_hash(type: :mouse_down, timestamp_ns: 1, window_id: 1, x: 3.0, y: 4.0, button: 1, clicks: 2)
     assert event.left?

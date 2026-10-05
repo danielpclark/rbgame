@@ -19,7 +19,10 @@ extern crate lazy_static;
 mod support;
 
 mod audio;
+mod camera;
+mod clipboard;
 mod events;
+mod gamepad;
 mod input;
 mod renderer;
 mod surface;
@@ -41,10 +44,13 @@ pub extern "C" fn Init_rbgame_native() {
         system::define(module);
         events::define(module);
         input::define(module);
+        clipboard::define(module);
     });
 
     window::define(&mut native);
     renderer::define(&mut native);
     surface::define(&mut native);
     audio::define(&mut native);
+    gamepad::define(&mut native);
+    camera::define(&mut native);
 }

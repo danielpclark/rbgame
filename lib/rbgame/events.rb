@@ -17,10 +17,12 @@ module Rbgame
       end
 
       # Drains the queue, yielding each event; returns an Enumerator without
-      # a block.
+      # a block. Everything queued right now is yielded: SDL's poll stops at
+      # the end of the cycle it last pumped, so a new cycle is started first.
       def each
         return enum_for(:each) unless block_given?
 
+        Native.restart_poll_cycle
         while (event = poll)
           yield event
         end
