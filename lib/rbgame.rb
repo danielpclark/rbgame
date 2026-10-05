@@ -2,7 +2,7 @@
 
 %w[
   version errors native mode color vector rect key keyboard mouse event events clock
-  window surface texture geometry canvas canvas/shapes canvas/text canvas/images display gamepad
+  window surface texture geometry canvas canvas/shapes canvas/text canvas/images display gamepad camera clipboard
   sound mixer synth subsystems frame_recorder game
 ].each { |file| require_relative "rbgame/#{file}" }
 

@@ -54,9 +54,20 @@ has arrived so far, and what rbgame did about it:
   `Gamepad::Virtual` over SDL's virtual joystick so the tests drive a pad
   without hardware. Keyboard and mouse arrive through the same event queue
   rbgame already drains, so they work on a display as they did headless.
-* **Cameras and haptics.** The V4L2, PipeWire and Media Foundation camera
-  drivers and the haptic drivers exist in the crate; rbgame has no API for
-  them yet.
+* **Cameras.** The V4L2, PipeWire and Media Foundation drivers feed SDL's
+  camera layer, which `Rbgame::Camera` wraps (`src/camera.rs`,
+  `lib/rbgame/camera.rb`): devices, formats, permission, frames as
+  `Surface`s, and `Event::Camera*`. Tests run on SDL's dummy camera driver
+  (`RBGAME_CAMERA_DRIVER=dummy`), which is what a machine without a webcam
+  sees; a real capture needs a device.
+* **Clipboard and touch.** `Clipboard` and `Event::Finger*` wrap what the
+  video layer has had all along.
+* **Not wrapped, and why.** Haptics: `Gamepad#rumble` covers what games
+  use; SDL's effect API (springs, ramps, custom waveforms) can follow on
+  request. Sensors and power status: only dummy drivers upstream, so
+  nothing to read yet. Dialogs, notifications and message boxes: desktop
+  integration through portals and zenity, not game loop material; they
+  can be wrapped when wanted.
 
 The rule for an update that brings a new subsystem: wrap it. A capability
 that is only in the crate is not in rbgame; it gets a thin native class, a

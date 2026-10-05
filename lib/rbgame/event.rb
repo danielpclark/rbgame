@@ -99,6 +99,41 @@ module Rbgame
     GamepadButtonDown = Data.define(:timestamp_ns, :which, :button_number) { include GamepadButtonish }
     GamepadButtonUp = Data.define(:timestamp_ns, :which, :button_number) { include GamepadButtonish }
 
+    # Shared by camera events: `which` is SDL's id for the device.
+    module Cameraish
+      def camera = Camera.find(which)
+
+      def deconstruct_keys(keys)
+        super(nil).merge(camera: camera)
+      end
+    end
+
+    CameraAdded = Data.define(:timestamp_ns, :which) { include Cameraish }
+    CameraRemoved = Data.define(:timestamp_ns, :which) { include Cameraish }
+    CameraApproved = Data.define(:timestamp_ns, :which) { include Cameraish }
+    CameraDenied = Data.define(:timestamp_ns, :which) { include Cameraish }
+
+    ClipboardUpdate = Data.define(:timestamp_ns, :owner, :mime_types) do
+      def owner? = owner
+    end
+
+    # Touch events: positions and movement are fractions of the window,
+    # 0 to 1, so a finger's `pos` scales by the screen size.
+    module Fingerish
+      include Positioned
+      def rel = Vector.new(dx, dy)
+
+      def deconstruct_keys(keys)
+        super(nil).merge(pos: pos)
+      end
+    end
+
+    FINGER_FIELDS = %i[timestamp_ns window_id touch_id finger_id x y dx dy pressure].freeze
+    FingerDown = Data.define(*FINGER_FIELDS) { include Fingerish }
+    FingerUp = Data.define(*FINGER_FIELDS) { include Fingerish }
+    FingerMotion = Data.define(*FINGER_FIELDS) { include Fingerish }
+    FingerCanceled = Data.define(*FINGER_FIELDS) { include Fingerish }
+
     GamepadAxisMotion = Data.define(:timestamp_ns, :which, :axis_number, :raw_value) do
       include Gamepadish
       def axis = Gamepad::AXES[axis_number]
@@ -117,7 +152,12 @@ module Rbgame
       window: Window, drop: Drop, user: User,
       gamepad_added: GamepadAdded, gamepad_removed: GamepadRemoved,
       gamepad_button_down: GamepadButtonDown, gamepad_button_up: GamepadButtonUp,
-      gamepad_axis_motion: GamepadAxisMotion, other: Unknown
+      gamepad_axis_motion: GamepadAxisMotion,
+      camera_added: CameraAdded, camera_removed: CameraRemoved,
+      camera_approved: CameraApproved, camera_denied: CameraDenied,
+      clipboard_update: ClipboardUpdate,
+      finger_down: FingerDown, finger_up: FingerUp, finger_motion: FingerMotion, finger_canceled: FingerCanceled,
+      other: Unknown
     }.freeze
 
     RENAMED_FIELDS = { button: :button_number, axis: :axis_number }.freeze

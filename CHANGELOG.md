@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- SDL translation updated to `67182975` (2 upstream commits): the GPU API
+  front end, which rbgame does not use (the 2D renderer is its drawing
+  model).
 - SDL translation updated to `d4e95a8c` (40 upstream commits): the Wayland
   video driver; the OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 renderers,
   which SDL now prefers over `software` on a window with a display

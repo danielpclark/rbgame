@@ -263,6 +263,72 @@ module Rbgame
     end
   end
 
+  class Camera
+    class Format
+      attr_reader width: Integer
+      attr_reader height: Integer
+      attr_reader fps: Float
+      def self.new: (width: Integer, height: Integer, fps: Float) -> Format
+      def size: () -> Vector
+      def to_s: () -> String
+    end
+    class Device
+      attr_reader id: Integer
+      attr_reader name: String
+      attr_reader position: Symbol
+      def self.new: (id: Integer, name: String, position: Symbol) -> Device
+      def formats: () -> Array[Format]
+      def open: (?size: vectorish?, ?fps: Numeric?) -> Camera
+      def none?: () -> bool
+    end
+    class None
+      def id: () -> nil
+      def name: () -> String
+      def position: () -> Symbol
+      def formats: () -> Array[Format]
+      def open: (?size: vectorish?, ?fps: Numeric?) -> None
+      def none?: () -> bool
+      def permission: () -> Symbol
+      def approved?: () -> bool
+      def denied?: () -> bool
+      def pending?: () -> bool
+      def format: () -> nil
+      def frame: () -> nil
+      def close: () -> self
+    end
+    extend Enumerable[Device]
+    def self.drivers: () -> Array[String]
+    def self.driver: () -> String?
+    def self.all: () -> Array[Device]
+    def self.each: () { (Device) -> void } -> Array[Device]
+    def self.first: () -> (Device | None)
+    def self.any?: () -> bool
+    def self.find: (Integer id) -> (Device | None)
+    def self.open: (?size: vectorish?, ?fps: Numeric?) -> (Camera | None)
+    def self.format_from: ([Integer, Integer, Integer, Integer]) -> Format
+    attr_reader native: untyped
+    attr_reader device: Device
+    def initialize: (untyped native, device: Device) -> void
+    def id: () -> Integer
+    def name: () -> String
+    def position: () -> Symbol
+    def none?: () -> bool
+    def permission: () -> Symbol
+    def approved?: () -> bool
+    def denied?: () -> bool
+    def pending?: () -> bool
+    def format: () -> Format?
+    def frame: () -> Surface?
+    def close: () -> self
+  end
+
+  module Clipboard
+    def self.text: () -> String
+    def self.text=: (untyped) -> void
+    def self.text?: () -> bool
+    def self.clear: () -> singleton(Clipboard)
+  end
+
   module Mouse
     BUTTONS: Hash[Symbol, Integer]
     def self.position: () -> Vector
@@ -345,6 +411,43 @@ module Rbgame
       attr_reader raw_value: Integer
       def axis: () -> Symbol?
       def value: () -> Float
+    end
+    class CameraAdded
+      attr_reader timestamp_ns: Integer
+      attr_reader which: Integer
+      def camera: () -> (Camera::Device | Camera::None)
+    end
+    class CameraRemoved < CameraAdded
+    end
+    class CameraApproved < CameraAdded
+    end
+    class CameraDenied < CameraAdded
+    end
+    class ClipboardUpdate
+      attr_reader timestamp_ns: Integer
+      attr_reader owner: bool
+      attr_reader mime_types: Array[String]
+      def owner?: () -> bool
+    end
+    FINGER_FIELDS: Array[Symbol]
+    class FingerDown
+      attr_reader timestamp_ns: Integer
+      attr_reader window_id: Integer?
+      attr_reader touch_id: Integer
+      attr_reader finger_id: Integer
+      attr_reader x: Float
+      attr_reader y: Float
+      attr_reader dx: Float
+      attr_reader dy: Float
+      attr_reader pressure: Float
+      def pos: () -> Vector
+      def rel: () -> Vector
+    end
+    class FingerUp < FingerDown
+    end
+    class FingerMotion < FingerDown
+    end
+    class FingerCanceled < FingerDown
     end
     def self.from_hash: (Hash[Symbol, untyped]) -> untyped
   end
@@ -612,8 +715,12 @@ module Rbgame
     end
     class Audio < Subsystem
     end
+    class Camera < Subsystem
+      ENV_VAR: String
+    end
     def self.video: () -> Video
     def self.audio: () -> Audio
+    def self.camera: () -> Camera
     def self.gamepad: () -> Subsystem
     def self.[]: (Symbol) -> Subsystem
   end

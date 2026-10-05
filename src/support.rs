@@ -215,6 +215,15 @@ pub fn fpair(a: f64, b: f64) -> Array {
     array
 }
 
+/// A Ruby Array of Strings.
+pub fn strings(values: impl IntoIterator<Item = String>) -> Array {
+    let mut array = Array::new();
+    for value in values {
+        array.push(RString::new_utf8(&value));
+    }
+    array
+}
+
 /// A Ruby String, or nil.
 pub fn opt_string(value: Option<String>) -> AnyObject {
     match value {

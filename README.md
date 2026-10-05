@@ -119,8 +119,12 @@ backends, and rbgame uses them as they land:
   `Gamepad`: one layout for every pad, sticks as Vectors, rumble, and
   events. `Gamepad::Virtual` is a pretend pad for tests, which is how the
   suite covers it without hardware.
-* **Still missing upstream**: fonts beyond SDL's 8x8 debug font, and the
-  macOS backends. Cameras are in the crate but not yet in rbgame's API.
+* **Cameras**: the V4L2 and PipeWire (Linux) and Media Foundation (Windows)
+  drivers behind `Camera`: `Camera.open` gives the first webcam, or a null
+  object without one, and `frame` hands back each new picture as a
+  `Surface`. The clipboard and touch events are wrapped too.
+* **Still missing upstream**: fonts beyond SDL's 8x8 debug font, the macOS
+  backends, platform sensors and power status (only dummy drivers so far).
 
 `docs/UPSTREAM.md` explains how rbgame follows that project.
 
@@ -170,9 +174,11 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Canvas` | `fill`, `fill_rect`, `stroke_rect`, `line` (any width), `lines`, `circle`, `ellipse`, `arc`, `polygon` (concave too), `text`, `draw(texture, at:/rect:, angle:, flip:)`, `clip { }`, `with_target(texture) { }`, `to_surface` |
 | `Surface` | CPU pixels: `fill`, `fill_circle`, `[x, y]`, `blit`, `scaled`, `rotated`, `flipped`, `color_key=`, `save`/`Surface.load` (PNG, JPEG, BMP) |
 | `Texture` | a `Surface` uploaded for fast drawing; `alpha=`, `color_mod=`, `blend_mode=` |
-| `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `Window`, ... are `Data` |
+| `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `FingerDown`, `Window`, ... are `Data` |
 | `Key`, `Keyboard`, `Mouse` | `Key.code(:space)`, `Keyboard.pressed?(:left)`, `Mouse.position` |
 | `Gamepad` | `Gamepad.first` (or `Gamepad::None`), `pressed?(:south)`, `left_stick`, `trigger(:right)`, `rumble`; `Event::GamepadButtonDown[button: :start]`; `Gamepad::Virtual` for tests |
+| `Camera` | `Camera.open(size: [640, 480])` (or `Camera::None`), `frame` → `Surface`, `approved?`; `Event::CameraApproved` |
+| `Clipboard` | `Clipboard.text`, `Clipboard.text=`; `Event::ClipboardUpdate` |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
 | `Sound`, `Mixer`, `Synth` | WAV or sample playback (`Mixer.default`, or your own with any output); `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |

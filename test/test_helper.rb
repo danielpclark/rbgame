@@ -6,6 +6,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 # machine has, so results are the same everywhere (CI included).
 ENV["RBGAME_VIDEO_DRIVER"] ||= "offscreen"
 ENV["RBGAME_AUDIO_DRIVER"] ||= "dummy"
+ENV["RBGAME_CAMERA_DRIVER"] ||= "dummy"
 
 require "minitest/autorun"
 require "tmpdir"

@@ -24,7 +24,7 @@ module Rbgame
 
   # SDL's subsystems, started on demand and at most once.
   module Subsystems
-    FLAGS = { audio: 0x10, video: 0x20, joystick: 0x200, haptic: 0x1000, gamepad: 0x2000, events: 0x4000 }.freeze
+    FLAGS = { audio: 0x10, video: 0x20, joystick: 0x200, haptic: 0x1000, gamepad: 0x2000, events: 0x4000, sensor: 0x8000, camera: 0x10000 }.freeze
 
     # One subsystem: knows its flag and the hint that picks its driver.
     class Subsystem
@@ -86,11 +86,30 @@ module Rbgame
       end
     end
 
+    # Camera: no webcam and no driver is not an error, just no cameras; the
+    # dummy driver keeps the subsystem up so Camera.all answers [].
+    class Camera < Subsystem
+      ENV_VAR = "RBGAME_CAMERA_DRIVER"
+
+      def initialize = super(:camera, hint: "SDL_CAMERA_DRIVER")
+
+      def start(driver: ENV[ENV_VAR])
+        super
+      rescue SDLError
+        begin
+          super(driver: "dummy")
+        rescue SDLError
+          self
+        end
+      end
+    end
+
     class << self
       def video = @video ||= Video.new
       def audio = @audio ||= Audio.new
+      def camera = @camera ||= Camera.new
       def gamepad = @gamepad ||= Subsystem.new(:gamepad, hint: nil)
-      def [](name) = { video: video, audio: audio, gamepad: gamepad }.fetch(name) { Subsystem.new(name, hint: nil) }
+      def [](name) = { video: video, audio: audio, camera: camera, gamepad: gamepad }.fetch(name) { Subsystem.new(name, hint: nil) }
     end
   end
 end

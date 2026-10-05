@@ -42,6 +42,26 @@ fn window_event_name(event_type: EventType) -> &'static str {
     }
 }
 
+fn camera_event_name(event_type: EventType) -> Option<&'static str> {
+    match event_type {
+        EventType::CAMERA_DEVICE_ADDED => Some("camera_added"),
+        EventType::CAMERA_DEVICE_REMOVED => Some("camera_removed"),
+        EventType::CAMERA_DEVICE_APPROVED => Some("camera_approved"),
+        EventType::CAMERA_DEVICE_DENIED => Some("camera_denied"),
+        _ => None,
+    }
+}
+
+fn finger_event_name(event_type: EventType) -> Option<&'static str> {
+    match event_type {
+        EventType::FINGER_DOWN => Some("finger_down"),
+        EventType::FINGER_UP => Some("finger_up"),
+        EventType::FINGER_MOTION => Some("finger_motion"),
+        EventType::FINGER_CANCELED => Some("finger_canceled"),
+        _ => None,
+    }
+}
+
 /// The Ruby-side shape of an SDL event.
 pub fn event_to_hash(event: Event) -> Hash {
     let mut hash = Hash::new();
@@ -129,6 +149,25 @@ pub fn event_to_hash(event: Event) -> Hash {
             put(&mut hash, "which", Fixnum::new(axis.which as i64));
             put(&mut hash, "axis", Fixnum::new(axis.axis as i64));
             put(&mut hash, "raw_value", Fixnum::new(axis.value as i64));
+        }
+        Event::CameraDevice(device) if camera_event_name(device.event_type).is_some() => {
+            put_type(&mut hash, camera_event_name(device.event_type).unwrap_or("other"));
+            put(&mut hash, "which", Fixnum::new(device.which as i64));
+        }
+        Event::TouchFinger(finger) if finger_event_name(finger.event_type).is_some() => {
+            put_type(&mut hash, finger_event_name(finger.event_type).unwrap_or("other"));
+            put(&mut hash, "touch_id", Fixnum::new(finger.touch_id as i64));
+            put(&mut hash, "finger_id", Fixnum::new(finger.finger_id as i64));
+            put(&mut hash, "x", Float::new(finger.x as f64));
+            put(&mut hash, "y", Float::new(finger.y as f64));
+            put(&mut hash, "dx", Float::new(finger.dx as f64));
+            put(&mut hash, "dy", Float::new(finger.dy as f64));
+            put(&mut hash, "pressure", Float::new(finger.pressure as f64));
+        }
+        Event::Clipboard(clipboard) => {
+            put_type(&mut hash, "clipboard_update");
+            put(&mut hash, "owner", Boolean::new(clipboard.owner));
+            put(&mut hash, "mime_types", crate::support::strings(clipboard.mime_types.clone()));
         }
         other => {
             put_type(&mut hash, "other");
