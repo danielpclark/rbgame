@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Gorillas (`examples/gorillas`): a clone of QBasic's GORILLA.BAS, playable
   and self-playing, with the original tunes.
 - `rake sdl:check` / `rake sdl:update` to follow the SDL translation.
+- `Rbgame::Gamepad`: SDL's gamepad layer with named buttons (`:south`,
+  `:dpad_left`, ...) and axes, sticks as `Vector`s with a dead zone,
+  triggers from 0 to 1, rumble and LED, `Gamepad.first` with
+  `Gamepad::None` when nothing is plugged in; `Event::GamepadAdded`,
+  `GamepadRemoved`, `GamepadButtonDown`/`Up` and `GamepadAxisMotion`;
+  `Gamepad::Virtual`, a pretend pad for tests and demos.
 
 ### Changed
 - SDL translation updated to `d4e95a8c` (40 upstream commits): the Wayland

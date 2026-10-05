@@ -114,9 +114,13 @@ backends, and rbgame uses them as they land:
   With no device, `Mixer` is silent rather than broken.
 * **Images**: `Surface.load` reads PNG, JPEG and BMP; `Surface#save` writes
   PNG (or BMP by extension).
+* **Gamepads**: SDL's gamepad layer (HIDAPI drivers for Xbox, PlayStation,
+  Nintendo and Steam controllers, Linux evdev, Windows GameInput) behind
+  `Gamepad`: one layout for every pad, sticks as Vectors, rumble, and
+  events. `Gamepad::Virtual` is a pretend pad for tests, which is how the
+  suite covers it without hardware.
 * **Still missing upstream**: fonts beyond SDL's 8x8 debug font, and the
-  macOS backends. Gamepads (HIDAPI, evdev and Windows drivers) and cameras
-  are in the crate but not yet in rbgame's API.
+  macOS backends. Cameras are in the crate but not yet in rbgame's API.
 
 `docs/UPSTREAM.md` explains how rbgame follows that project.
 
@@ -168,6 +172,7 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Texture` | a `Surface` uploaded for fast drawing; `alpha=`, `color_mod=`, `blend_mode=` |
 | `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `Window`, ... are `Data` |
 | `Key`, `Keyboard`, `Mouse` | `Key.code(:space)`, `Keyboard.pressed?(:left)`, `Mouse.position` |
+| `Gamepad` | `Gamepad.first` (or `Gamepad::None`), `pressed?(:south)`, `left_stick`, `trigger(:right)`, `rumble`; `Event::GamepadButtonDown[button: :start]`; `Gamepad::Virtual` for tests |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
 | `Sound`, `Mixer`, `Synth` | WAV or sample playback (`Mixer.default`, or your own with any output); `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |

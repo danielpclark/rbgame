@@ -20,6 +20,7 @@ mod support;
 
 mod audio;
 mod events;
+mod gamepad;
 mod input;
 mod renderer;
 mod surface;
@@ -47,4 +48,5 @@ pub extern "C" fn Init_rbgame_native() {
     renderer::define(&mut native);
     surface::define(&mut native);
     audio::define(&mut native);
+    gamepad::define(&mut native);
 }

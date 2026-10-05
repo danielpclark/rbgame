@@ -74,16 +74,53 @@ module Rbgame
     end
 
     Drop = Data.define(:timestamp_ns, :window_id, :x, :y, :data) { include Positioned }
+
+    # Shared by gamepad events: `which` is SDL's id for the pad.
+    module Gamepadish
+      def gamepad = Gamepad.find(which)
+
+      def deconstruct_keys(keys)
+        super(nil).merge(gamepad: gamepad)
+      end
+    end
+
+    module GamepadButtonish
+      include Gamepadish
+      def button = Gamepad::BUTTONS[button_number]
+      def button?(name) = button == name.to_sym
+
+      def deconstruct_keys(keys)
+        super.merge(button: button)
+      end
+    end
+
+    GamepadAdded = Data.define(:timestamp_ns, :which) { include Gamepadish }
+    GamepadRemoved = Data.define(:timestamp_ns, :which) { include Gamepadish }
+    GamepadButtonDown = Data.define(:timestamp_ns, :which, :button_number) { include GamepadButtonish }
+    GamepadButtonUp = Data.define(:timestamp_ns, :which, :button_number) { include GamepadButtonish }
+
+    GamepadAxisMotion = Data.define(:timestamp_ns, :which, :axis_number, :raw_value) do
+      include Gamepadish
+      def axis = Gamepad::AXES[axis_number]
+      def value = (raw_value / Gamepad::AXIS_RANGE).clamp(-1.0, 1.0)
+
+      def deconstruct_keys(keys)
+        super.merge(axis: axis, value: value)
+      end
+    end
     User = Data.define(:timestamp_ns, :window_id, :code)
     Unknown = Data.define(:timestamp_ns, :window_id, :raw_type, :description)
 
     CLASSES = {
       quit: Quit, key_down: KeyDown, key_up: KeyUp, text_input: TextInput, text_editing: TextEditing,
       mouse_motion: MouseMotion, mouse_down: MouseDown, mouse_up: MouseUp, mouse_wheel: MouseWheel,
-      window: Window, drop: Drop, user: User, other: Unknown
+      window: Window, drop: Drop, user: User,
+      gamepad_added: GamepadAdded, gamepad_removed: GamepadRemoved,
+      gamepad_button_down: GamepadButtonDown, gamepad_button_up: GamepadButtonUp,
+      gamepad_axis_motion: GamepadAxisMotion, other: Unknown
     }.freeze
 
-    RENAMED_FIELDS = { button: :button_number }.freeze
+    RENAMED_FIELDS = { button: :button_number, axis: :axis_number }.freeze
 
     class << self
       # The Event for a Hash from Rbgame::Native.

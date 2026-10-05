@@ -194,6 +194,75 @@ module Rbgame
     def self.alt?: () -> bool
   end
 
+  class Gamepad
+    BUTTONS: Array[Symbol]
+    AXES: Array[Symbol]
+    AXIS_RANGE: Float
+    DEAD_ZONE: Float
+    extend Enumerable[Gamepad]
+    def self.all: () -> Array[Gamepad]
+    def self.each: () { (Gamepad) -> void } -> Array[Gamepad]
+    def self.first: () -> (Gamepad | None)
+    def self.any?: () -> bool
+    def self.find: (Integer id) -> (Gamepad | None)
+    def self.button_index: (Symbol | String) -> Integer
+    def self.axis_index: (Symbol | String) -> Integer
+    attr_reader native: untyped
+    attr_accessor dead_zone: Float
+    def initialize: (untyped native, ?dead_zone: Float) -> void
+    def id: () -> Integer
+    def name: () -> String
+    def type: () -> Symbol
+    def player: () -> Integer
+    def connected?: () -> bool
+    def none?: () -> bool
+    def pressed?: (Symbol | String) -> bool
+    def pressed: () -> Array[Symbol]
+    def button?: (Symbol | String) -> bool
+    def axis?: (Symbol | String) -> bool
+    def axis: (Symbol | String) -> Float
+    def left_stick: () -> Vector
+    def right_stick: () -> Vector
+    def trigger: (Symbol | String side) -> Float
+    def rumble: (Numeric low, ?Numeric high, ?seconds: Numeric) -> bool
+    def rumble_triggers: (Numeric left, ?Numeric right, ?seconds: Numeric) -> bool
+    def led=: (colorish) -> void
+    def close: () -> self
+
+    class None
+      def id: () -> nil
+      def name: () -> String
+      def type: () -> Symbol
+      def player: () -> Integer
+      def connected?: () -> bool
+      def none?: () -> bool
+      def pressed?: (Symbol | String) -> bool
+      def pressed: () -> Array[Symbol]
+      def button?: (Symbol | String) -> bool
+      def axis?: (Symbol | String) -> bool
+      def axis: (Symbol | String) -> Float
+      def left_stick: () -> Vector
+      def right_stick: () -> Vector
+      def trigger: (Symbol | String side) -> Float
+      def rumble: (Numeric low, ?Numeric? high, ?seconds: Numeric?) -> bool
+      def rumble_triggers: (Numeric left, ?Numeric? right, ?seconds: Numeric?) -> bool
+      def led=: (colorish) -> void
+      def close: () -> self
+    end
+
+    class Virtual
+      def self.attach: (?name: String) -> Virtual
+      attr_reader native: untyped
+      def initialize: (untyped native) -> void
+      def id: () -> Integer
+      def gamepad: () -> (Gamepad | None)
+      def press: (Symbol | String) -> self
+      def release: (Symbol | String) -> self
+      def move: (Symbol | String axis, Numeric value) -> self
+      def detach: () -> self
+    end
+  end
+
   module Mouse
     BUTTONS: Hash[Symbol, Integer]
     def self.position: () -> Vector
@@ -256,6 +325,26 @@ module Rbgame
       def resized?: () -> bool
       def close_requested?: () -> bool
       def size: () -> Vector
+    end
+    class GamepadAdded
+      attr_reader timestamp_ns: Integer
+      attr_reader which: Integer
+      def gamepad: () -> (Gamepad | Gamepad::None)
+    end
+    class GamepadRemoved < GamepadAdded
+    end
+    class GamepadButtonDown < GamepadAdded
+      attr_reader button_number: Integer
+      def button: () -> Symbol?
+      def button?: (Symbol | String) -> bool
+    end
+    class GamepadButtonUp < GamepadButtonDown
+    end
+    class GamepadAxisMotion < GamepadAdded
+      attr_reader axis_number: Integer
+      attr_reader raw_value: Integer
+      def axis: () -> Symbol?
+      def value: () -> Float
     end
     def self.from_hash: (Hash[Symbol, untyped]) -> untyped
   end
@@ -525,6 +614,7 @@ module Rbgame
     end
     def self.video: () -> Video
     def self.audio: () -> Audio
+    def self.gamepad: () -> Subsystem
     def self.[]: (Symbol) -> Subsystem
   end
 

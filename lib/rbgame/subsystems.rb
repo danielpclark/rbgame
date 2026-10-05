@@ -89,7 +89,8 @@ module Rbgame
     class << self
       def video = @video ||= Video.new
       def audio = @audio ||= Audio.new
-      def [](name) = { video: video, audio: audio }.fetch(name) { Subsystem.new(name, hint: nil) }
+      def gamepad = @gamepad ||= Subsystem.new(:gamepad, hint: nil)
+      def [](name) = { video: video, audio: audio, gamepad: gamepad }.fetch(name) { Subsystem.new(name, hint: nil) }
     end
   end
 end

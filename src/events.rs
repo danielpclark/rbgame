@@ -111,6 +111,25 @@ pub fn event_to_hash(event: Event) -> Hash {
             put_type(&mut hash, "user");
             put(&mut hash, "code", Fixnum::new(user.code as i64));
         }
+        Event::GamepadDevice(device) if device.event_type == EventType::GAMEPAD_ADDED => {
+            put_type(&mut hash, "gamepad_added");
+            put(&mut hash, "which", Fixnum::new(device.which as i64));
+        }
+        Event::GamepadDevice(device) if device.event_type == EventType::GAMEPAD_REMOVED => {
+            put_type(&mut hash, "gamepad_removed");
+            put(&mut hash, "which", Fixnum::new(device.which as i64));
+        }
+        Event::GamepadButton(button) => {
+            put_type(&mut hash, if button.down { "gamepad_button_down" } else { "gamepad_button_up" });
+            put(&mut hash, "which", Fixnum::new(button.which as i64));
+            put(&mut hash, "button", Fixnum::new(button.button as i64));
+        }
+        Event::GamepadAxis(axis) => {
+            put_type(&mut hash, "gamepad_axis_motion");
+            put(&mut hash, "which", Fixnum::new(axis.which as i64));
+            put(&mut hash, "axis", Fixnum::new(axis.axis as i64));
+            put(&mut hash, "raw_value", Fixnum::new(axis.value as i64));
+        }
         other => {
             put_type(&mut hash, "other");
             put(&mut hash, "raw_type", Fixnum::new(other.event_type().0 as i64));

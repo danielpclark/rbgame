@@ -47,12 +47,22 @@ has arrived so far, and what rbgame did about it:
   opens the default device; with none it is `Mixer::Silence`.
 * **Image codecs.** PNG and JPEG (stb_image and miniz translated), so
   `Surface.load` reads them and `Surface#save` writes PNG.
-* **Input.** The HIDAPI gamepad drivers (Xbox, PlayStation, Nintendo, Steam
-  and many more), Linux evdev, Windows GameInput/RawInput/WGI, the haptic
-  drivers and the V4L2, PipeWire and Media Foundation camera drivers exist
-  in the crate; rbgame has no gamepad or camera API yet. Keyboard and mouse
-  arrive through the same event queue rbgame already drains, so they work
-  on a display as they did headless.
+* **Gamepads.** The HIDAPI gamepad drivers (Xbox, PlayStation, Nintendo,
+  Steam and many more), Linux evdev and Windows GameInput/RawInput/WGI feed
+  SDL's gamepad layer, which `Rbgame::Gamepad` wraps (`src/gamepad.rs`,
+  `lib/rbgame/gamepad.rb`): named buttons and axes, `Event::Gamepad*`, and
+  `Gamepad::Virtual` over SDL's virtual joystick so the tests drive a pad
+  without hardware. Keyboard and mouse arrive through the same event queue
+  rbgame already drains, so they work on a display as they did headless.
+* **Cameras and haptics.** The V4L2, PipeWire and Media Foundation camera
+  drivers and the haptic drivers exist in the crate; rbgame has no API for
+  them yet.
+
+The rule for an update that brings a new subsystem: wrap it. A capability
+that is only in the crate is not in rbgame; it gets a thin native class, a
+Ruby object designed for games (with a null object where "none plugged in"
+is normal), events where it has them, tests that run headless, a changelog
+line and a row in the README's tour.
 
 Still worth watching:
 
