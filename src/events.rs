@@ -197,6 +197,14 @@ methods!(
         NilClass::new()
     }
 
+    // SDL ends each poll cycle with a sentinel event; a wait that returns an
+    // event leaves it queued, and the next poll then stops at it before
+    // anything pushed since. Dropping it makes the next poll start a cycle.
+    fn ev_restart_poll_cycle() -> NilClass {
+        queue::flush_event(EventType::POLL_SENTINEL);
+        NilClass::new()
+    }
+
     fn ev_queued_count() -> Fixnum {
         Fixnum::new(queue::queued_event_count() as i64)
     }
@@ -209,5 +217,6 @@ pub fn define(module: &mut Module) {
     module.def_self("push_quit", ev_push_quit);
     module.def_self("push_user_event", ev_push_user);
     module.def_self("flush_events", ev_flush);
+    module.def_self("restart_poll_cycle", ev_restart_poll_cycle);
     module.def_self("queued_event_count", ev_queued_count);
 }

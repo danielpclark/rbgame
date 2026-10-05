@@ -40,4 +40,13 @@ class EventsTest < Minitest::Test
     event = Events.wait(timeout: 1)
     assert_instance_of Event::User, event
   end
+
+  # A wait that returns an event leaves SDL's cycle-ending sentinel queued;
+  # a plain poll would then stop at it, before anything pushed since.
+  def test_each_sees_what_was_pushed_after_a_wait
+    Events.push_user(1)
+    assert_equal 1, Events.wait(timeout: 1).code
+    Events.push_user(7)
+    assert_equal [7], Events.grep(Event::User).map(&:code)
+  end
 end

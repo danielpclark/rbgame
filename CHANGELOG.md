@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `GamepadRemoved`, `GamepadButtonDown`/`Up` and `GamepadAxisMotion`;
   `Gamepad::Virtual`, a pretend pad for tests and demos.
 
+### Fixed
+- `Events.each` (and so `Events.any?`, `to_a`, `grep`) yields everything
+  queued: an `Events.wait` that returned an event left SDL's cycle-ending
+  sentinel behind, and the next drain stopped at it before anything pushed
+  since, such as the Quit in the README's loop.
+
 ### Changed
 - SDL translation updated to `d4e95a8c` (40 upstream commits): the Wayland
   video driver; the OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 renderers,
