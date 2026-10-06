@@ -21,6 +21,7 @@ dependencies = [
  "lazy_static",
  "rutie",
  "sdl3",
+ "sdl3-image",
 ]
 
 [[package]]
@@ -36,10 +37,18 @@ dependencies = [
 [[package]]
 name = "sdl3"
 version = "3.5.0"
-source = "git+https://github.com/danielpclark/SDL?rev=671829752c77451e514f7259df71145b375582b5#671829752c77451e514f7259df71145b375582b5"
+source = "git+https://github.com/danielpclark/SDL?rev=50de5cb989df#50de5cb989df3f3ae32cf7725b8b9973d835890d"
 dependencies = [
  "libc",
  "windows-sys",
+]
+
+[[package]]
+name = "sdl3-image"
+version = "3.5.0"
+source = "git+https://github.com/danielpclark/SDL?rev=50de5cb989df#50de5cb989df3f3ae32cf7725b8b9973d835890d"
+dependencies = [
+ "sdl3",
 ]
 
 [[package]]
