@@ -4,7 +4,7 @@ use rutie::{AnyObject, Array, Boolean, Encoding, Fixnum, Module, NilClass, Objec
 use sdl3::video::{BlendMode, Color, FlipMode, PixelFormat, Rect, ScaleMode, Surface};
 
 use crate::support::{
-    arg, f32_of, i32_of, i64_of, is_nil, native, opt_rect_of, raise_arg, str_of, u8_of, OrRaise,
+    arg, f32_of, i32_of, i32s_of, i64_of, is_nil, native, opt_rect_of, raise_arg, str_of, u8_of, OrRaise,
 };
 
 pub struct SurfaceBox {
@@ -73,9 +73,41 @@ methods!(
         wrap(Surface::load_bmp(str_of(path)).or_raise())
     }
 
-    // BMP, PNG or JPEG, told apart by their contents.
+    // Any format SDL_image reads, told apart by its contents.
     fn surf_load_image(path: RString) -> AnyObject {
-        wrap(Surface::load(str_of(path)).or_raise())
+        wrap(sdl3_image::load(str_of(path)).or_raise())
+    }
+
+    // [[surface, delay_ms], ...] from an animated GIF, APNG, ANI or WebP.
+    fn surf_load_animation(path: RString) -> Array {
+        let animation = sdl3_image::load_animation(str_of(path)).or_raise();
+        let mut frames = Array::new();
+        for (surface, delay) in animation.frames.into_iter().zip(animation.delays) {
+            let mut frame = Array::with_capacity(2);
+            frame.push(wrap(surface));
+            frame.push(Fixnum::new(delay as i64));
+            frames.push(frame);
+        }
+        frames
+    }
+
+    // Writes `surfaces` with `delays_ms` as an animation in the format the
+    // extension names (GIF, APNG, ANI).
+    fn surf_save_animation(path: RString, surfaces: Array, delays_ms: Array) -> NilClass {
+        let surfaces = arg(surfaces);
+        let delays = i32s_of(delays_ms, "delays");
+        let mut frames = Vec::with_capacity(surfaces.length());
+        for object in surfaces {
+            let surface = object.try_convert_to::<RbSurface>().map_err(|_| raise_arg("frames must be surfaces")).unwrap();
+            frames.push(surface.surface().duplicate().or_raise());
+        }
+        if frames.len() != delays.len() {
+            raise_arg("one delay per frame");
+        }
+        let (w, h) = frames.first().map(|f| (f.width(), f.height())).unwrap_or((0, 0));
+        let mut animation = sdl3_image::Animation { w, h, frames, delays };
+        sdl3_image::save_animation(&mut animation, str_of(path)).or_raise();
+        NilClass::new()
     }
 );
 
@@ -106,6 +138,12 @@ methods!(
 
     fn surf_save_png(path: RString) -> NilClass {
         rtself.surface_mut().save_png(str_of(path)).or_raise();
+        NilClass::new()
+    }
+
+    // The format the extension names: PNG, JPEG, BMP, GIF, TGA, ICO, CUR.
+    fn surf_save(path: RString) -> NilClass {
+        sdl3_image::save(rtself.surface_mut(), str_of(path)).or_raise();
         NilClass::new()
     }
 
@@ -253,6 +291,8 @@ pub fn define(native: &mut Module) {
     native.def_self("create_surface", surf_create);
     native.def_self("load_bmp", surf_load_bmp);
     native.def_self("load_image", surf_load_image);
+    native.def_self("load_animation", surf_load_animation);
+    native.def_self("save_animation", surf_save_animation);
 
     let mut klass = native.define_nested_class("Surface", None);
     // Instances come only from Rust (`wrap_data`), never from `Surface.new`.
@@ -264,6 +304,7 @@ pub fn define(native: &mut Module) {
         klass.def("format_name", surf_format_name);
         klass.def("save_bmp", surf_save_bmp);
         klass.def("save_png", surf_save_png);
+        klass.def("save", surf_save);
         klass.def("fill_rect", surf_fill_rect);
         klass.def("clear", surf_clear);
         klass.def("blit", surf_blit);

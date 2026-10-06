@@ -327,6 +327,28 @@ module Rbgame
     def self.text=: (untyped) -> void
     def self.text?: () -> bool
     def self.clear: () -> singleton(Clipboard)
+    def self.image: () -> Surface?
+  end
+
+  class Animation
+    include Enumerable[Frame]
+    class Frame
+      attr_reader surface: Surface
+      attr_reader duration: Float
+      def self.new: (surface: Surface, duration: Float) -> Frame
+      def size: () -> Vector
+    end
+    def self.load: (path) -> Animation
+    def self.[]: (*Surface surfaces, duration: Numeric) -> Animation
+    attr_reader frames: Array[Frame]
+    def initialize: (Array[Frame] frames) -> void
+    def each: () { (Frame) -> void } -> Array[Frame]
+    def count: () -> Integer
+    def empty?: () -> bool
+    def size: () -> Vector
+    def duration: () -> Float
+    def at: (Numeric seconds, ?loop: bool) -> Surface?
+    def save: (path) -> self
   end
 
   module Mouse

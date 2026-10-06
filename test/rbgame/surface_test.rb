@@ -79,6 +79,32 @@ class SurfaceTest < Minitest::Test
     end
   end
 
+  def test_saves_and_loads_the_formats_games_use
+    Dir.mktmpdir do |dir|
+      surface = Surface.new(5, 3).fill(:black)
+      surface[2, 1] = Color::YELLOW
+      %w[gif tga bmp jpg].each do |extension|
+        path = File.join(dir, "pic.#{extension}")
+        surface.save(path)
+        loaded = Surface.load(path)
+        assert_equal Rbgame::Vector[5, 3], loaded.size, extension
+        assert_in_delta 255, loaded[2, 1].r, 8, "#{extension} keeps the pixel (JPEG within its loss)"
+        assert_in_delta 0, loaded[0, 0].r, 8, extension
+      end
+      assert_raises(Rbgame::SDLError) { surface.save(File.join(dir, "pic.xyz")) }
+    end
+  end
+
+  def test_rasterizes_svg
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "dot.svg")
+      File.write(path, '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="#0000ff"/></svg>')
+      loaded = Surface.load(path)
+      assert_equal Rbgame::Vector[8, 8], loaded.size
+      assert_equal Color::BLUE, loaded[4, 4]
+    end
+  end
+
   def test_load_tells_formats_apart_by_content
     Dir.mktmpdir do |dir|
       path = File.join(dir, "actually-a-bmp.png")
