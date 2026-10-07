@@ -113,9 +113,11 @@ backends, and rbgame uses them as they land:
 * **Sound**: ALSA, PulseAudio, PipeWire and WASAPI drivers are translated,
   and SDL_mixer too (`sdl3-mixer`): `Music` streams MP3, Ogg Vorbis, FLAC,
   WAV, AIFF, VOC and AU with loops, fades and volume, and `Sound.load`
-  decodes the same formats into clips. MIDI through TiMidity is behind the
-  extension's `midi` feature, since TiMidity is not zlib-licensed. With no
-  device, `Mixer` and `Music` are silent rather than broken.
+  decodes the same formats into clips, which `Mixer` plays on SDL_mixer's
+  tracks: overlapping, with volume, pan, loops and fades per channel. MIDI
+  through TiMidity is behind the extension's `midi` feature, since
+  TiMidity is not zlib-licensed. With no device, `Mixer` and `Music` are
+  silent rather than broken.
 * **Images**: SDL_image is translated too (`sdl3-image`), so `Surface.load`
   reads PNG, JPEG, GIF, WebP, BMP, TGA, QOI, PCX, PNM, SVG, XPM, XCF, LBM,
   ICO and CUR, `Surface#save` writes PNG, JPEG, BMP, GIF, TGA, ICO and CUR,
@@ -189,7 +191,7 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Clipboard` | `Clipboard.text`, `Clipboard.text=`, `Clipboard.image`; `Event::ClipboardUpdate` |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
-| `Sound`, `Mixer`, `Synth` | clips from any sound file or from samples (`Mixer.default`, or your own with any output); `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |
+| `Sound`, `Mixer`, `Synth` | clips from any sound file or from samples; `sound.play(volume: 0.5, pan: -1, loops: :forever)` → a `Channel`, as many at once as you like; `Mixer.offline` mixes into a `Sound`; `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |
 | `Music` | streamed `Music.play("theme.ogg", loops: :forever, fade_in: 2)`, `stop(fade_out:)`, `pause`, `volume=`, `position`; `Music::Silence` without a device |
 | `Game` | `setup`/`update(dt)`/`draw(screen)`/`on_event`; `run(frames:, screenshots:)` |
 

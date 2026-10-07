@@ -48,7 +48,8 @@ module Rbgame
       Sound.new(pcm + other.pcm, rate: rate, channels: channels)
     end
 
-    def play(mixer = Mixer.default) = mixer.play(self)
+    # Starts the clip on a Channel of `mixer`; options as Mixer#play.
+    def play(mixer = Mixer.default, **options) = mixer.play(self, **options)
     def to_samples = pcm.unpack("s<*").map { |s| s / 32_767.0 }
     def inspect = format("#<Rbgame::Sound %.2fs %dHz x%d>", duration, rate, channels)
   end

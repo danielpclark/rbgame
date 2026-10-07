@@ -2,61 +2,93 @@
 
 require "test_helper"
 
+# Mixes offline, so the tests hear exactly what SDL_mixer produced, and
+# on the dummy device for the default mixer.
 class MixerTest < Minitest::Test
-  # Stands in for Rbgame::Native::AudioOut.
-  class FakeOutput
-    attr_reader :queued, :gain, :cleared
+  Mixer = Rbgame::Mixer
+  Sound = Rbgame::Sound
 
-    def initialize
-      @queued = []
-      @cleared = 0
-    end
+  RATE = 8000
 
-    def queue(pcm, rate, channels) = @queued << [pcm.bytesize, rate, channels]
-    def queued_bytes = @queued.sum(&:first)
-    def clear = @cleared += 1
-    def pause; end
-    def resume; end
-    def gain=(gain)
-      @gain = gain
-    end
+  # A flat clip at `level` for `seconds`, mono at the mixer's rate.
+  def flat(level, seconds)
+    Sound.from_samples([level] * (seconds * RATE).round, rate: RATE)
   end
 
-  def test_a_silent_mixer_plays_nothing_and_says_so
-    mixer = Rbgame::Mixer.new(output: Rbgame::Mixer::Silence.new)
-    refute mixer.available?
-    refute mixer.play(Rbgame::Sound.silence(0.1))
-    assert_equal 0.0, mixer.queued
-    refute mixer.playing?
-    mixer.volume = 0.5
-    mixer.stop
+  def levels(sound, at_seconds)
+    frame = (at_seconds * sound.rate).round * sound.channels
+    sound.to_samples[frame, sound.channels]
   end
 
-  def test_sounds_are_queued_in_their_own_format
-    output = FakeOutput.new
-    mixer = Rbgame::Mixer.new(output: output)
-    assert mixer.available?
-    assert mixer.play(Rbgame::Sound.silence(0.5, rate: 8000, channels: 1))
-    assert_equal [[8000, 8000, 1]], output.queued
-    assert_in_delta 8000 / (Rbgame::Mixer::RATE * Rbgame::Mixer::CHANNELS * 2.0), mixer.queued
-    assert mixer.playing?
-    mixer.stop
-    assert_equal 1, output.cleared
+  def setup
+    @mixer = Mixer.offline(rate: RATE, channels: 1)
   end
 
-  def test_volume_is_clamped
-    output = FakeOutput.new
-    mixer = Rbgame::Mixer.new(output: output)
-    mixer.volume = 3
-    assert_equal 1.0, output.gain
-    mixer.volume = -1
-    assert_equal 0.0, output.gain
+  def test_sounds_overlap
+    @mixer.play(flat(0.25, 0.3))
+    @mixer.play(flat(0.25, 0.1))
+    assert_equal 2, @mixer.channels.size
+    mixed = @mixer.render(0.3)
+    assert_in_delta 0.5, levels(mixed, 0.05).first, 0.01, "both clips sound together"
+    assert_in_delta 0.25, levels(mixed, 0.2).first, 0.01, "the short one has finished"
+    assert_equal 1, @mixer.channels.size
+  end
+
+  def test_volume_and_pan_shape_a_channel
+    stereo = Mixer.offline(rate: RATE, channels: 2)
+    stereo.play(flat(0.8, 0.1), volume: 0.5, pan: -1.0)
+    left, right = levels(stereo.render(0.1), 0.05)
+    assert_in_delta 0.4, left, 0.02
+    assert_in_delta 0.0, right, 0.02, "panned hard left"
+
+    stereo.play(flat(0.8, 0.1), volume: 3)
+    assert_in_delta 0.8, levels(stereo.render(0.1), 0.05).first, 0.02, "volume clamps to 1.0"
+  end
+
+  def test_stop_pause_and_resume
+    channel = @mixer.play(flat(0.5, 1.0))
+    assert channel.playing?
+    channel.pause
+    assert channel.paused?
+    assert_in_delta 0.0, levels(@mixer.render(0.1), 0.05).first, 0.01, "paused is silent"
+    channel.resume
+    assert channel.playing?
+    @mixer.stop
+    refute channel.live?
+    assert_empty @mixer.channels
+    refute @mixer.playing?
+  end
+
+  def test_loops_keep_a_sound_going
+    @mixer.play(flat(0.5, 0.05), loops: :forever)
+    mixed = @mixer.render(0.5)
+    assert_in_delta 0.5, levels(mixed, 0.45).first, 0.01
+    assert @mixer.playing?
+  end
+
+  def test_mixer_volume_applies_to_everything
+    @mixer.play(flat(0.5, 0.1))
+    @mixer.volume = 0.5
+    assert_in_delta 0.25, levels(@mixer.render(0.1), 0.05).first, 0.01
+  end
+
+  def test_silence_plays_nothing_and_says_so
+    silence = Mixer::Silence.new
+    refute silence.available?
+    channel = silence.play(Sound.silence(0.1), loops: :forever)
+    refute channel.live?
+    assert_same channel, channel.stop(fade_out: 1).pause.resume
+    assert_equal [], silence.channels
+    refute silence.playing?
+    silence.volume = 0.5
   end
 
   def test_the_default_mixer_opens_lazily_on_the_dummy_driver
     RbgameTest.screen
-    assert Rbgame::Mixer.default.available?
-    assert Rbgame::Sound.silence(0.05).play
-    assert Rbgame::Mixer.available?
+    assert Mixer.default.available?
+    channel = Sound.silence(0.05).play
+    assert_kind_of Mixer::Channel, channel
+    assert Mixer.available?
+    Mixer.stop
   end
 end
