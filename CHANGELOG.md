@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- SDL translation updated to `50de5cb9` (39 upstream commits): the
+  `sdl3-image` crate (SDL_image translated: the decoders, savers,
+  animations, SVG through nanosvg), which `Surface` and `Animation` now
+  use; the GPU renderer with Vulkan and Direct3D 12 backends (after
+  OpenGL in SDL's list, so nothing changes on a display); the `sdl3-test`
+  crate for upstream's own tests.
 - SDL translation updated to `67182975` (2 upstream commits): the GPU API
   front end, which rbgame does not use (the 2D renderer is its drawing
   model).

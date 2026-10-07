@@ -17,6 +17,9 @@ module Rbgame
 
       def text? = Native.clipboard_has_text?
       def clear = tap { Native.clear_clipboard }
+
+      # An image on the clipboard as a Surface, or nil.
+      def image = Native.clipboard_image&.then { |surface| Surface.new(surface) }
     end
   end
 end

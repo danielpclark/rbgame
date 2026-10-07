@@ -14,7 +14,8 @@ module Rbgame
   class Surface
     attr_reader :native
 
-    # Loads a PNG, JPEG or BMP file, told apart by its contents.
+    # Loads any image SDL_image reads (PNG, JPEG, GIF, BMP, TGA, QOI, PCX,
+    # PNM, SVG, XPM, XCF, LBM, ICO, CUR), told apart by its contents.
     def self.load(path) = new(Native.load_image(path.to_s))
 
     # Surface.new([w, h]) or Surface.new(w, h); also wraps a Native::Surface.
@@ -35,10 +36,11 @@ module Rbgame
     def pitch = native.pitch
     def format = native.format_name
 
-    # Writes a PNG, or a BMP when the name ends in .bmp.
+    # Writes the format the extension names: PNG, JPEG, BMP, GIF, TGA, ICO
+    # or CUR; PNG when there is no extension.
     def save(path)
       path = path.to_s
-      File.extname(path).casecmp?(".bmp") ? native.save_bmp(path) : native.save_png(path)
+      File.extname(path).empty? ? native.save_png(path) : native.save(path)
       self
     end
 

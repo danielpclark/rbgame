@@ -27,6 +27,14 @@ methods!(
         clipboard::clear_clipboard_data().or_raise();
         NilClass::new()
     }
+
+    // An image on the clipboard as a Surface, or nil.
+    fn clip_image() -> AnyObject {
+        match sdl3_image::clipboard_image() {
+            Ok(surface) => crate::surface::wrap(surface),
+            Err(_) => NilClass::new().to_any_object(),
+        }
+    }
 );
 
 pub fn define(module: &mut Module) {
@@ -34,4 +42,5 @@ pub fn define(module: &mut Module) {
     module.def_self("set_clipboard_text", clip_set_text);
     module.def_self("clipboard_has_text?", clip_has_text);
     module.def_self("clear_clipboard", clip_clear);
+    module.def_self("clipboard_image", clip_image);
 }

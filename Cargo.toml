@@ -21,9 +21,11 @@ path = "src/lib.rs"
 rutie = { version = "0.13", features = ["no-link"] }
 lazy_static = "1"
 
-# Pure-Rust SDL 3. Pinned to a commit so builds are reproducible; refresh
-# with `rake sdl:update` (see docs/UPSTREAM.md) when upstream moves.
-sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "671829752c77451e514f7259df71145b375582b5" }
+# Pure-Rust SDL 3 and SDL_image, two crates of one workspace. Pinned to a
+# commit so builds are reproducible; refresh both with `rake sdl:update`
+# (see docs/UPSTREAM.md) when upstream moves.
+sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "50de5cb989df" }
+sdl3-image = { git = "https://github.com/danielpclark/SDL", rev = "50de5cb989df" }
 
 [profile.release]
 opt-level = 3

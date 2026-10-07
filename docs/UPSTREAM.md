@@ -45,8 +45,16 @@ has arrived so far, and what rbgame did about it:
   software renderer unless Mesa's EGL is installed.
 * **Audio drivers.** ALSA, PulseAudio, PipeWire and WASAPI. `Mixer.default`
   opens the default device; with none it is `Mixer::Silence`.
-* **Image codecs.** PNG and JPEG (stb_image and miniz translated), so
-  `Surface.load` reads them and `Surface#save` writes PNG.
+* **Images.** The workspace now has `sdl3-image`, the SDL_image
+  translation, pinned at the same revision as `sdl3` (`rake sdl:update`
+  moves both). `Surface.load` and `Surface#save` go through it, so every
+  format it reads and writes is rbgame's, and `Animation` wraps its
+  animation API (GIF, APNG, ANI). Not translated upstream yet: WebP, AVIF,
+  TIFF and JPEG XL.
+* **The GPU renderer** ("gpu", on SDL's GPU API with Vulkan and Direct3D
+  12 backends) sits after "vulkan" in the renderer list, so OpenGL stays
+  the default on a display and `Display.renderers` simply lists one more.
+  `sdl3-test`, the SDL_test translation, is for the crate's own tests.
 * **Gamepads.** The HIDAPI gamepad drivers (Xbox, PlayStation, Nintendo,
   Steam and many more), Linux evdev and Windows GameInput/RawInput/WGI feed
   SDL's gamepad layer, which `Rbgame::Gamepad` wraps (`src/gamepad.rs`,

@@ -25,6 +25,11 @@ class ClipboardTest < Minitest::Test
     assert_equal "", Clipboard.text
   end
 
+  def test_no_image_is_nil
+    Clipboard.text = "words, not pictures"
+    assert_nil Clipboard.image
+  end
+
   def test_setting_it_is_an_event
     Clipboard.text = "copied"
     updates = Events.grep(Event::ClipboardUpdate)
