@@ -3,7 +3,7 @@
 %w[
   version errors native mode color vector rect key keyboard mouse event events clock
   window surface texture geometry canvas canvas/shapes canvas/text canvas/images display gamepad camera clipboard animation
-  sound mixer synth subsystems frame_recorder game
+  sound mixer music synth subsystems frame_recorder game
 ].each { |file| require_relative "rbgame/#{file}" }
 
 # rbgame: games in Ruby on SDL, with SDL itself written in Rust and no C

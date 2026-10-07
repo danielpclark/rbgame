@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- SDL translation updated to `cc374012` (27 upstream commits): the
+  `sdl3-mixer` crate (SDL_mixer translated: the mixer and its WAV, AIFF,
+  VOC, AU, MP3, Ogg Vorbis and FLAC decoders, plus TiMidity for MIDI in
+  its own crate), which `Music` and `Sound.load` now use; WebP decoding in
+  `sdl3-image`; the `sdl3-net` crate, which rbgame leaves to Ruby's
+  `socket`.
 - SDL translation updated to `50de5cb9` (39 upstream commits): the
   `sdl3-image` crate (SDL_image translated: the decoders, savers,
   animations, SVG through nanosvg), which `Surface` and `Animation` now

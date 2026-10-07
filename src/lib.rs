@@ -24,6 +24,7 @@ mod clipboard;
 mod events;
 mod gamepad;
 mod input;
+mod music;
 mod renderer;
 mod surface;
 mod system;
@@ -53,4 +54,5 @@ pub extern "C" fn Init_rbgame_native() {
     audio::define(&mut native);
     gamepad::define(&mut native);
     camera::define(&mut native);
+    music::define(&mut native);
 }

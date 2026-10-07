@@ -24,8 +24,16 @@ lazy_static = "1"
 # Pure-Rust SDL 3 and SDL_image, two crates of one workspace. Pinned to a
 # commit so builds are reproducible; refresh both with `rake sdl:update`
 # (see docs/UPSTREAM.md) when upstream moves.
-sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "50de5cb989df" }
-sdl3-image = { git = "https://github.com/danielpclark/SDL", rev = "50de5cb989df" }
+sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "cc374012baaf" }
+sdl3-image = { git = "https://github.com/danielpclark/SDL", rev = "cc374012baaf" }
+# SDL_mixer without its bundled TiMidity, which is not zlib-licensed
+# (Artistic-1.0-Perl OR LGPL-2.1); `--features midi` adds it.
+sdl3-mixer = { git = "https://github.com/danielpclark/SDL", rev = "cc374012baaf", default-features = false }
+
+[features]
+# MIDI playback through TiMidity (needs GUS patches or a SoundFont at run
+# time; see sdl3-mixer's README). Off by default for the license above.
+midi = ["sdl3-mixer/timidity"]
 
 [profile.release]
 opt-level = 3

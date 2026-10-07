@@ -13,6 +13,28 @@ class SoundTest < Minitest::Test
     assert sound.frozen?
   end
 
+  def test_loads_wav_and_other_formats_through_the_decoders
+    Dir.mktmpdir do |dir|
+      samples = [0.0, 0.5, -0.5, 1.0, -1.0, 0.25]
+      wav = File.join(dir, "clip.wav")
+      RbgameTest.write_wav(wav, Sound.from_samples(samples, rate: 8000))
+      loaded = Sound.load(wav)
+      assert_equal 8000, loaded.rate
+      assert_equal 1, loaded.channels
+      samples.zip(loaded.to_samples) { |want, got| assert_in_delta want, got, 0.001 }
+
+      # Sun AU: a 24-byte header, then 16-bit big-endian PCM.
+      au = File.join(dir, "clip.au")
+      pcm = samples.map { |x| (x * 32_767).round }.pack("s>*")
+      File.binwrite(au, [".snd", 24, pcm.bytesize, 3, 8000, 1].pack("a4N5") + pcm)
+      loaded = Sound.load(au)
+      assert_equal 8000, loaded.rate
+      samples.zip(loaded.to_samples) { |want, got| assert_in_delta want, got, 0.001 }
+
+      assert_raises(Rbgame::SDLError) { Sound.load(File.join(dir, "missing.mp3")) }
+    end
+  end
+
   def test_concatenation
     a = Sound.silence(0.5, rate: 100)
     b = Sound.silence(0.25, rate: 100)

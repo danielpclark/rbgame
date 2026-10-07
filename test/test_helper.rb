@@ -25,6 +25,14 @@ module RbgameTest
     end
   end
 
+  # A Sound written as a 16-bit PCM WAV file, for the loaders to read back.
+  def self.write_wav(path, sound)
+    data = sound.pcm
+    header = ["RIFF", 36 + data.bytesize, "WAVE", "fmt ", 16, 1, sound.channels, sound.rate,
+              sound.rate * sound.channels * 2, sound.channels * 2, 16, "data", data.bytesize]
+    File.binwrite(path, header.pack("a4Va4a4VvvVVvva4V") + data)
+  end
+
   # The same screen opened with other options; `screen` reopens the usual
   # one afterwards, so tests stay independent of each other.
   def self.reopen_screen(**options)

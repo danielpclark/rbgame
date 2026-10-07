@@ -57,7 +57,7 @@ namespace :sdl do
     cargo_toml = File.read("Cargo.toml", encoding: "UTF-8")
     # Every crate from that repository moves together.
     File.write("Cargo.toml", cargo_toml.gsub(/(danielpclark\/SDL"[^}]*rev = ")\h+(")/, "\\1#{rev}\\2"))
-    sh "cargo", "update", "-p", "sdl3", "-p", "sdl3-image"
+    sh "cargo", "update", "-p", "sdl3", "-p", "sdl3-image", "-p", "sdl3-mixer"
     sh "cargo", "build", "--release"
     puts "SDL pinned to #{rev}. Run the tests, then commit Cargo.toml and Cargo.lock."
   end
