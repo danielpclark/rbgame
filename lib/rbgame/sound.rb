@@ -1,16 +1,18 @@
 # frozen_string_literal: true
 
 module Rbgame
-  # A clip of signed 16-bit PCM. Build one from a WAV file, from samples, or
-  # with Synth.play from a QBasic PLAY string, then Sound#play it.
+  # A clip of signed 16-bit PCM. Build one from a sound file, from samples,
+  # or with Synth.play from a QBasic PLAY string, then Sound#play it. For
+  # long pieces streamed as they play, see Music.
   class Sound
     BYTES_PER_SAMPLE = 2
 
     attr_reader :pcm, :rate, :channels
 
     class << self
+      # Decodes a whole file: WAV, MP3, Ogg Vorbis, FLAC, AIFF, VOC or AU.
       def load(path)
-        rate, channels, pcm = Native.load_wav(path.to_s)
+        rate, channels, pcm = Native.decode_audio(path.to_s)
         new(pcm, rate: rate, channels: channels)
       end
 

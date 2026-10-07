@@ -45,6 +45,17 @@ has arrived so far, and what rbgame did about it:
   software renderer unless Mesa's EGL is installed.
 * **Audio drivers.** ALSA, PulseAudio, PipeWire and WASAPI. `Mixer.default`
   opens the default device; with none it is `Mixer::Silence`.
+* **SDL_mixer.** `sdl3-mixer` (pinned with the others) decodes WAV, AIFF,
+  VOC, AU, MP3 (dr_mp3), Ogg Vorbis (stb_vorbis) and FLAC (dr_flac), and
+  mixes tracks. rbgame uses it two ways: `Sound.load` decodes a whole file
+  through its `AudioDecoder` into the PCM clips `Mixer` already plays, and
+  `Music` (`src/music.rs`, `lib/rbgame/music.rb`) streams one track on a
+  mixer of its own, with loops, fades and gain. Its bundled TiMidity
+  (MIDI) is a separate crate under the Artistic or LGPL license, so the
+  dependency is `default-features = false` and rbgame's `midi` cargo
+  feature turns it on for those who want it. Still to do: `Mixer` itself
+  could move onto SDL_mixer's tracks for overlapping clips, panning and
+  3D positioning; today it queues clips back to back.
 * **Images.** The workspace now has `sdl3-image`, the SDL_image
   translation, pinned at the same revision as `sdl3` (`rake sdl:update`
   moves both). `Surface.load` and `Surface#save` go through it, so every
@@ -70,6 +81,9 @@ has arrived so far, and what rbgame did about it:
   sees; a real capture needs a device.
 * **Clipboard and touch.** `Clipboard` and `Event::Finger*` wrap what the
   video layer has had all along.
+* **SDL_net.** `sdl3-net` (TCP, UDP, address resolution) is not wrapped:
+  Ruby's own `socket` library already does this for a Ruby game, and a
+  native copy of it would add nothing.
 * **Not wrapped, and why.** Haptics: `Gamepad#rumble` covers what games
   use; SDL's effect API (springs, ramps, custom waveforms) can follow on
   request. Sensors and power status: only dummy drivers upstream, so

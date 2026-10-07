@@ -330,6 +330,50 @@ module Rbgame
     def self.image: () -> Surface?
   end
 
+  module Music
+    class Silence
+      def available?: () -> bool
+      def play: (path, ?loops: Integer | Symbol, ?fade_in: Numeric) -> bool
+      def stop: (?fade_out: Numeric) -> self
+      def pause: () -> self
+      def resume: () -> self
+      def playing?: () -> bool
+      def paused?: () -> bool
+      def volume: () -> Float
+      def volume=: (Numeric) -> void
+      def position: () -> Float
+      def duration: () -> Float?
+    end
+    class Player
+      attr_reader native: untyped
+      def initialize: (untyped native) -> void
+      def available?: () -> bool
+      def play: (path, ?loops: Integer | Symbol, ?fade_in: Numeric) -> bool
+      def stop: (?fade_out: Numeric) -> self
+      def pause: () -> self
+      def resume: () -> self
+      def playing?: () -> bool
+      def paused?: () -> bool
+      def volume: () -> Float
+      def volume=: (Numeric) -> void
+      def position: () -> Float
+      def duration: () -> Float?
+    end
+    def self.player: () -> (Player | Silence)
+    def self.close: () -> nil
+    def self.available?: () -> bool
+    def self.play: (path, ?loops: Integer | Symbol, ?fade_in: Numeric) -> bool
+    def self.stop: (?fade_out: Numeric) -> (Player | Silence)
+    def self.pause: () -> (Player | Silence)
+    def self.resume: () -> (Player | Silence)
+    def self.playing?: () -> bool
+    def self.paused?: () -> bool
+    def self.volume: () -> Float
+    def self.volume=: (Numeric) -> void
+    def self.position: () -> Float
+    def self.duration: () -> Float?
+  end
+
   class Animation
     include Enumerable[Frame]
     class Frame
