@@ -687,7 +687,7 @@ module Rbgame
     def duration: () -> Float
     def empty?: () -> bool
     def +: (Sound) -> Sound
-    def play: (?Mixer) -> bool
+    def play: (?(Mixer | Mixer::Silence) mixer, ?loops: Integer | Symbol, ?volume: Numeric, ?fade_in: Numeric, ?pan: Numeric) -> (Mixer::Channel | Mixer::Channel::None)
     def to_samples: () -> Array[Float]
   end
 
@@ -695,38 +695,71 @@ module Rbgame
     RATE: Integer
     CHANNELS: Integer
 
-    interface _Output
-      def queue: (String pcm, Integer rate, Integer channels) -> void
-      def queued_bytes: () -> Integer
-      def clear: () -> void
-      def pause: () -> void
-      def resume: () -> void
-      def gain=: (Float) -> void
+    class Channel
+      class None
+        def playing?: () -> bool
+        def paused?: () -> bool
+        def live?: () -> bool
+        def stop: (?fade_out: Numeric) -> self
+        def pause: () -> self
+        def resume: () -> self
+        def volume: () -> Float
+        def volume=: (Numeric) -> void
+        def pan=: (Numeric) -> void
+      end
+      attr_reader native: untyped
+      def initialize: (untyped native) -> void
+      def playing?: () -> bool
+      def paused?: () -> bool
+      def live?: () -> bool
+      def stop: (?fade_out: Numeric) -> self
+      def pause: () -> self
+      def resume: () -> self
+      def volume: () -> Float
+      def volume=: (Numeric) -> void
+      def pan=: (Numeric) -> void
     end
 
     class Silence
-      include _Output
+      def available?: () -> bool
+      def play: (Sound, ?loops: Integer | Symbol, ?volume: Numeric, ?fade_in: Numeric, ?pan: Numeric) -> Channel::None
+      def stop: (?fade_out: Numeric) -> self
+      def pause: () -> self
+      def resume: () -> self
+      def volume: () -> Float
+      def volume=: (Numeric) -> void
+      def channels: () -> Array[Channel]
+      def playing?: () -> bool
     end
 
-    def self.default: () -> Mixer
-    def self.close: () -> void
+    def self.default: () -> (Mixer | Silence)
+    def self.close: () -> nil
+    def self.offline: (?rate: Integer, ?channels: Integer) -> Mixer
     def self.available?: () -> bool
-    def self.play: (Sound) -> bool
-    def self.stop: () -> Mixer
+    def self.play: (Sound, ?loops: Integer | Symbol, ?volume: Numeric, ?fade_in: Numeric, ?pan: Numeric) -> (Channel | Channel::None)
+    def self.stop: (?fade_out: Numeric) -> (Mixer | Silence)
+    def self.pause: () -> (Mixer | Silence)
+    def self.resume: () -> (Mixer | Silence)
+    def self.volume: () -> Float
     def self.volume=: (Numeric) -> void
-    def self.queued: () -> Float
+    def self.channels: () -> Array[Channel]
     def self.playing?: () -> bool
+    def self.millis: (Numeric seconds) -> Integer
 
-    attr_reader output: _Output
-    def initialize: (output: _Output) -> void
+    attr_reader native: untyped
+    def initialize: (untyped native) -> void
     def available?: () -> bool
-    def play: (Sound) -> bool
-    def stop: () -> self
+    def play: (Sound, ?loops: Integer | Symbol, ?volume: Numeric, ?fade_in: Numeric, ?pan: Numeric) -> Channel
+    def stop: (?fade_out: Numeric) -> self
     def pause: () -> self
     def resume: () -> self
+    def volume: () -> Float
     def volume=: (Numeric) -> void
-    def queued: () -> Float
+    def channels: () -> Array[Channel]
     def playing?: () -> bool
+    def rate: () -> Integer
+    def channel_count: () -> Integer
+    def render: (Numeric seconds) -> Sound
   end
 
   class Synth

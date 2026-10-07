@@ -53,9 +53,10 @@ has arrived so far, and what rbgame did about it:
   mixer of its own, with loops, fades and gain. Its bundled TiMidity
   (MIDI) is a separate crate under the Artistic or LGPL license, so the
   dependency is `default-features = false` and rbgame's `midi` cargo
-  feature turns it on for those who want it. Still to do: `Mixer` itself
-  could move onto SDL_mixer's tracks for overlapping clips, panning and
-  3D positioning; today it queues clips back to back.
+  feature turns it on for those who want it. `Mixer` itself runs on
+  SDL_mixer's tracks (`src/mixer.rs`): every `play` is a `Channel` of its
+  own, so clips overlap, with volume, pan, loops and fades; `Mixer.offline`
+  mixes without a device, which is how the tests hear the result.
 * **Images.** The workspace now has `sdl3-image`, the SDL_image
   translation, pinned at the same revision as `sdl3` (`rake sdl:update`
   moves both). `Surface.load` and `Surface#save` go through it, so every

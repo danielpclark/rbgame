@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- `Mixer` plays on SDL_mixer's tracks: `play` starts a `Channel` of its own
+  (`volume:`, `pan:`, `loops:`, `fade_in:`), so sounds overlap instead of
+  queueing; `Channel#stop(fade_out:)`, `pause`, `resume`, `volume=`, `pan=`;
+  `Mixer#channels`, `Mixer.offline(rate:, channels:)` with `render(seconds)`
+  for mixing into a `Sound`. `Mixer.new(output:)` and `Mixer#queued` are
+  gone; `Mixer::Silence` stands in for the whole mixer without a device.
 - SDL translation updated to `cc374012` (27 upstream commits): the
   `sdl3-mixer` crate (SDL_mixer translated: the mixer and its WAV, AIFF,
   VOC, AU, MP3, Ogg Vorbis and FLAC decoders, plus TiMidity for MIDI in

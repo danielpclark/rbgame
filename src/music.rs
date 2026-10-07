@@ -14,7 +14,8 @@ use crate::support::{f32_of, i64_of, native, str_of, OrRaise};
 
 static MIXER_INIT: Once = Once::new();
 
-fn ensure_init() {
+/// SDL_mixer's `MIX_Init`, once per process.
+pub fn ensure_init() {
     MIXER_INIT.call_once(|| {
         let _ = sdl3_mixer::init();
     });

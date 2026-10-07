@@ -39,8 +39,9 @@ in one place per type (`Color.coerce`, `Vector.coerce`, `Rect.coerce`).
 ## Objects over branches
 
 The library prefers an object that knows what to do over a method that
-asks and decides. A `Mixer` is given its output and never checks for nil:
-with no device the output is `Mixer::Silence`, which does nothing quietly.
+asks and decides. `Mixer.default` never hands back nil: with no device it
+is `Mixer::Silence`, which does nothing quietly and answers `play` with a
+`Channel::None` that stops and pauses just as quietly.
 `Game#run` records frames through a `FrameRecorder`, or `FrameRecorder::Nothing`
 when nothing was asked for. `Canvas#draw` does not ask whether it was given
 a Surface or a Texture; both respond to `with_texture(canvas)`, and each

@@ -45,9 +45,10 @@ class SoundTest < Minitest::Test
   def test_mixer_on_the_dummy_driver
     RbgameTest.screen
     assert Rbgame::Mixer.available?
-    assert Sound.silence(0.1).play
-    Rbgame::Mixer.volume = 0.5
+    channel = Sound.silence(0.1).play(volume: 0.5)
+    assert channel.playing?
     Rbgame::Mixer.stop
-    assert_in_delta 0.0, Rbgame::Mixer.queued, 0.01
+    refute channel.live?
+    refute Rbgame::Mixer.playing?
   end
 end
