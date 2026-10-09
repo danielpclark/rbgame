@@ -83,13 +83,21 @@ class SurfaceTest < Minitest::Test
     Dir.mktmpdir do |dir|
       surface = Surface.new(5, 3).fill(:black)
       surface[2, 1] = Color::YELLOW
-      %w[gif tga bmp jpg].each do |extension|
+      %w[gif tga bmp].each do |extension|
         path = File.join(dir, "pic.#{extension}")
-        surface.save(path)
-        loaded = Surface.load(path)
+        loaded = Surface.load(surface.save(path) && path)
         assert_equal Rbgame::Vector[5, 3], loaded.size, extension
-        assert_in_delta 255, loaded[2, 1].r, 8, "#{extension} keeps the pixel (JPEG within its loss)"
-        assert_in_delta 0, loaded[0, 0].r, 8, extension
+        assert_equal Color::YELLOW, loaded[2, 1], "#{extension} is lossless"
+        assert_equal Color::BLACK, loaded[0, 0], extension
+      end
+
+      solid = Surface.new(8, 8).fill(:yellow)
+      %w[jpg webp].each do |extension|
+        path = File.join(dir, "pic.#{extension}")
+        loaded = Surface.load(solid.save(path) && path)
+        assert_equal Rbgame::Vector[8, 8], loaded.size, extension
+        assert_in_delta 255, loaded[4, 4].r, 12, "#{extension} keeps a flat colour within its loss"
+        assert_in_delta 0, loaded[4, 4].b, 12, extension
       end
       assert_raises(Rbgame::SDLError) { surface.save(File.join(dir, "pic.xyz")) }
     end

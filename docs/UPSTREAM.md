@@ -61,8 +61,9 @@ has arrived so far, and what rbgame did about it:
   translation, pinned at the same revision as `sdl3` (`rake sdl:update`
   moves both). `Surface.load` and `Surface#save` go through it, so every
   format it reads and writes is rbgame's, and `Animation` wraps its
-  animation API (GIF, APNG, ANI). Not translated upstream yet: WebP, AVIF,
-  TIFF and JPEG XL.
+  animation API (GIF, APNG, ANI, WebP). WebP (libwebp) and TIFF (libtiff's
+  reader) are translated too, and dav1d for AV1; the AVIF container and
+  JPEG XL are not yet, so AVIF files wait on upstream.
 * **The GPU renderer** ("gpu", on SDL's GPU API with Vulkan and Direct3D
   12 backends) sits after "vulkan" in the renderer list, so OpenGL stays
   the default on a display and `Display.renderers` simply lists one more.
@@ -82,6 +83,17 @@ has arrived so far, and what rbgame did about it:
   sees; a real capture needs a device.
 * **Clipboard and touch.** `Clipboard` and `Event::Finger*` wrap what the
   video layer has had all along.
+* **Fonts.** `sdl3-ttf` (pinned with the others) is SDL_ttf with the
+  FreeType and HarfBuzz it bundles, translated. `Rbgame::Font`
+  (`src/font.rs`, `lib/rbgame/font.rb`) loads a TrueType or OpenType file,
+  measures and renders text to Surfaces (blended, wrapped), and sets
+  style, outline and size; `Canvas#text(font:)` draws with one. The
+  tests render DejaVu Sans Mono, vendored under `test/fixtures` with its
+  license. Not wrapped: text objects and the renderer and GPU text engines
+  (glyph atlases); a render per string is enough for a game's HUD, and
+  the engines can follow when a game needs thousands of glyphs a frame.
+* **SDL_rtf.** `sdl3-rtf` renders RTF documents through `sdl3-ttf`; not
+  game material, so not wrapped.
 * **SDL_net.** `sdl3-net` (TCP, UDP, address resolution) is not wrapped:
   Ruby's own `socket` library already does this for a Ruby game, and a
   native copy of it would add nothing.
@@ -101,8 +113,6 @@ line and a row in the README's tour.
 Still worth watching:
 
 * **Metal and the GPU renderer** for macOS, once the Cocoa backend lands.
-* **SDL_ttf** for real fonts; `Canvas#text` uses SDL's 8x8 debug font until
-  then.
 
 ### Where rbgame touches the crate
 

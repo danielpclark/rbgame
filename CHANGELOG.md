@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `Mixer#channels`, `Mixer.offline(rate:, channels:)` with `render(seconds)`
   for mixing into a `Sound`. `Mixer.new(output:)` and `Mixer#queued` are
   gone; `Mixer::Silence` stands in for the whole mixer without a device.
+- SDL translation updated to `47c817cc` (51 upstream commits): the
+  `sdl3-ttf` crate (SDL_ttf with FreeType and HarfBuzz translated), which
+  `Font` now uses; WebP encoding, TIFF decoding and dav1d's AV1 decoder in
+  `sdl3-image`; the `sdl3-rtf` crate, which rbgame does not wrap.
 - SDL translation updated to `cc374012` (27 upstream commits): the
   `sdl3-mixer` crate (SDL_mixer translated: the mixer and its WAV, AIFF,
   VOC, AU, MP3, Ogg Vorbis and FLAC decoders, plus TiMidity for MIDI in

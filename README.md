@@ -119,10 +119,10 @@ backends, and rbgame uses them as they land:
   TiMidity is not zlib-licensed. With no device, `Mixer` and `Music` are
   silent rather than broken.
 * **Images**: SDL_image is translated too (`sdl3-image`), so `Surface.load`
-  reads PNG, JPEG, GIF, WebP, BMP, TGA, QOI, PCX, PNM, SVG, XPM, XCF, LBM,
-  ICO and CUR, `Surface#save` writes PNG, JPEG, BMP, GIF, TGA, ICO and CUR,
-  and `Animation` loads animated GIF, APNG, ANI and WebP and saves the
-  first three.
+  reads PNG, JPEG, GIF, WebP, TIFF, BMP, TGA, QOI, PCX, PNM, SVG, XPM, XCF,
+  LBM, ICO and CUR, `Surface#save` writes PNG, JPEG, WebP, BMP, GIF, TGA,
+  ICO and CUR, and `Animation` loads and saves animated GIF, APNG, ANI and
+  WebP.
 * **Gamepads**: SDL's gamepad layer (HIDAPI drivers for Xbox, PlayStation,
   Nintendo and Steam controllers, Linux evdev, Windows GameInput) behind
   `Gamepad`: one layout for every pad, sticks as Vectors, rumble, and
@@ -132,8 +132,13 @@ backends, and rbgame uses them as they land:
   drivers behind `Camera`: `Camera.open` gives the first webcam, or a null
   object without one, and `frame` hands back each new picture as a
   `Surface`. The clipboard and touch events are wrapped too.
-* **Still missing upstream**: fonts beyond SDL's 8x8 debug font, the macOS
-  backends, platform sensors and power status (only dummy drivers so far).
+* **Fonts**: SDL_ttf is translated with the FreeType and HarfBuzz it
+  bundles (`sdl3-ttf`), so `Font.load("DejaVuSans.ttf", size: 24)` renders
+  TrueType and OpenType text, shaped for every script HarfBuzz handles,
+  and `screen.text(..., font: font)` draws with it. SDL's 8x8 debug font
+  remains the default when no font is given.
+* **Still missing upstream**: the macOS backends, platform sensors and
+  power status (only dummy drivers so far).
 
 `docs/UPSTREAM.md` explains how rbgame follows that project.
 
@@ -189,6 +194,7 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Gamepad` | `Gamepad.first` (or `Gamepad::None`), `pressed?(:south)`, `left_stick`, `trigger(:right)`, `rumble`; `Event::GamepadButtonDown[button: :start]`; `Gamepad::Virtual` for tests |
 | `Camera` | `Camera.open(size: [640, 480])` (or `Camera::None`), `frame` → `Surface`, `approved?`; `Event::CameraApproved` |
 | `Clipboard` | `Clipboard.text`, `Clipboard.text=`, `Clipboard.image`; `Event::ClipboardUpdate` |
+| `Font` | `Font.load(path, size: 24)`, `render(text, color:, wrap:)` → `Surface`, `measure`, `style = %i[bold italic]`, `outline=`; `screen.text(text, at:, font:, align: :center)` |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
 | `Sound`, `Mixer`, `Synth` | clips from any sound file or from samples; `sound.play(volume: 0.5, pan: -1, loops: :forever)` → a `Channel`, as many at once as you like; `Mixer.offline` mixes into a `Sound`; `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |
@@ -217,4 +223,10 @@ what must touch SDL, Ruby does the design*.
 
 Licensed under either of the MIT license ([LICENSE-MIT](LICENSE-MIT)) or the
 Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE)), at your
-option. The SDL translation it builds on is zlib-licensed, like SDL.
+option. The SDL translation it builds on is zlib-licensed, like SDL. Its
+`sdl3-ttf` crate also carries the FreeType License for its translation of
+FreeType, which asks for this credit: Portions of this software are
+copyright © 2023 The FreeType Project (www.freetype.org). All rights
+reserved. Its HarfBuzz translation is under HarfBuzz's MIT license and its
+Unicode tables under the Unicode License. The test suite's DejaVu Sans
+Mono font is under the Bitstream Vera license (`test/fixtures`).

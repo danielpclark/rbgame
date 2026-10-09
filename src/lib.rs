@@ -21,6 +21,7 @@ mod support;
 mod camera;
 mod clipboard;
 mod events;
+mod font;
 mod gamepad;
 mod input;
 mod mixer;
@@ -55,4 +56,5 @@ pub extern "C" fn Init_rbgame_native() {
     camera::define(&mut native);
     music::define(&mut native);
     mixer::define(&mut native);
+    font::define(&mut native);
 }
