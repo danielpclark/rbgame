@@ -322,6 +322,27 @@ module Rbgame
     def close: () -> self
   end
 
+  class Font
+    STYLES: Hash[Symbol, Integer]
+    attr_reader native: untyped
+    attr_reader path: String?
+    def self.load: (path, ?size: Numeric) -> Font
+    def initialize: (untyped native, ?path: String?) -> void
+    def size: () -> Float
+    def size=: (Numeric) -> void
+    def height: () -> Integer
+    def ascent: () -> Integer
+    def line_height: () -> Integer
+    def family: () -> String?
+    def fixed_width?: () -> bool
+    def style=: (Symbol | Array[Symbol]) -> void
+    def style: () -> Array[Symbol]
+    def outline=: (Integer) -> void
+    def outline: () -> Integer
+    def measure: (untyped string, ?wrap: Numeric?) -> Vector
+    def render: (untyped string, ?color: colorish, ?wrap: Numeric?) -> Surface
+  end
+
   module Clipboard
     def self.text: () -> String
     def self.text=: (untyped) -> void
@@ -619,9 +640,9 @@ module Rbgame
 
     module Text
       FONT_SIZE: Integer
-      def text: (untyped string, at: vectorish, ?color: colorish, ?scale: Numeric, ?align: Symbol) -> self
-      def text_width: (untyped string, ?scale: Numeric) -> Numeric
-      def text_height: (?scale: Numeric) -> Numeric
+      def text: (untyped string, at: vectorish, ?color: colorish, ?scale: Numeric, ?align: Symbol, ?font: Font?, ?wrap: Numeric?) -> self
+      def text_width: (untyped string, ?scale: Numeric, ?font: Font?) -> Numeric
+      def text_height: (?scale: Numeric, ?font: Font?) -> Numeric
     end
 
     module Images
