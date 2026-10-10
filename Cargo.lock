@@ -39,7 +39,7 @@ dependencies = [
 [[package]]
 name = "sdl3"
 version = "3.5.0"
-source = "git+https://github.com/danielpclark/SDL?rev=47c817cc2c7b#47c817cc2c7b80666a26a8ac8ec0927d2d7f9d2b"
+source = "git+https://github.com/danielpclark/SDL?rev=5c1c24fb9888#5c1c24fb98884b6a14c1d10989889d119ed556ec"
 dependencies = [
  "libc",
  "windows-sys",
@@ -48,7 +48,7 @@ dependencies = [
 [[package]]
 name = "sdl3-image"
 version = "3.5.0"
-source = "git+https://github.com/danielpclark/SDL?rev=47c817cc2c7b#47c817cc2c7b80666a26a8ac8ec0927d2d7f9d2b"
+source = "git+https://github.com/danielpclark/SDL?rev=5c1c24fb9888#5c1c24fb98884b6a14c1d10989889d119ed556ec"
 dependencies = [
  "sdl3",
 ]
@@ -56,7 +56,7 @@ dependencies = [
 [[package]]
 name = "sdl3-mixer"
 version = "3.5.0"
-source = "git+https://github.com/danielpclark/SDL?rev=47c817cc2c7b#47c817cc2c7b80666a26a8ac8ec0927d2d7f9d2b"
+source = "git+https://github.com/danielpclark/SDL?rev=5c1c24fb9888#5c1c24fb98884b6a14c1d10989889d119ed556ec"
 dependencies = [
  "sdl3",
  "sdl3-mixer-timidity",
@@ -65,7 +65,7 @@ dependencies = [
 [[package]]
 name = "sdl3-mixer-timidity"
 version = "3.5.0"
-source = "git+https://github.com/danielpclark/SDL?rev=47c817cc2c7b#47c817cc2c7b80666a26a8ac8ec0927d2d7f9d2b"
+source = "git+https://github.com/danielpclark/SDL?rev=5c1c24fb9888#5c1c24fb98884b6a14c1d10989889d119ed556ec"
 dependencies = [
  "sdl3",
 ]
@@ -73,7 +73,7 @@ dependencies = [
 [[package]]
 name = "sdl3-ttf"
 version = "3.5.0"
-source = "git+https://github.com/danielpclark/SDL?rev=47c817cc2c7b#47c817cc2c7b80666a26a8ac8ec0927d2d7f9d2b"
+source = "git+https://github.com/danielpclark/SDL?rev=5c1c24fb9888#5c1c24fb98884b6a14c1d10989889d119ed556ec"
 dependencies = [
  "sdl3",
 ]

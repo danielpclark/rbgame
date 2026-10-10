@@ -119,10 +119,10 @@ backends, and rbgame uses them as they land:
   TiMidity is not zlib-licensed. With no device, `Mixer` and `Music` are
   silent rather than broken.
 * **Images**: SDL_image is translated too (`sdl3-image`), so `Surface.load`
-  reads PNG, JPEG, GIF, WebP, TIFF, BMP, TGA, QOI, PCX, PNM, SVG, XPM, XCF,
-  LBM, ICO and CUR, `Surface#save` writes PNG, JPEG, WebP, BMP, GIF, TGA,
-  ICO and CUR, and `Animation` loads and saves animated GIF, APNG, ANI and
-  WebP.
+  reads PNG, JPEG, GIF, WebP, AVIF, JPEG XL, TIFF, BMP, TGA, QOI, PCX, PNM,
+  SVG, XPM, XCF, LBM, ICO and CUR, `Surface#save` writes PNG, JPEG, WebP,
+  BMP, GIF, TGA, ICO and CUR, and `Animation` loads animated GIF, APNG, ANI,
+  WebP and AVIF sequences and saves GIF, APNG, ANI and WebP.
 * **Gamepads**: SDL's gamepad layer (HIDAPI drivers for Xbox, PlayStation,
   Nintendo and Steam controllers, Linux evdev, Windows GameInput) behind
   `Gamepad`: one layout for every pad, sticks as Vectors, rumble, and
@@ -186,8 +186,8 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Rbgame.init`, `Rbgame.run`, `Rbgame.quit` | subsystems; `headless?`, `sdl_version` |
 | `Display.set_mode(size, title:, logical:)` → `Screen` | the window's canvas; `present`, `screenshot` |
 | `Canvas` | `fill`, `fill_rect`, `stroke_rect`, `line` (any width), `lines`, `circle`, `ellipse`, `arc`, `polygon` (concave too), `text`, `draw(texture, at:/rect:, angle:, flip:)`, `clip { }`, `with_target(texture) { }`, `to_surface` |
-| `Surface` | CPU pixels: `fill`, `fill_circle`, `[x, y]`, `blit`, `scaled`, `rotated`, `flipped`, `color_key=`, `save`/`Surface.load` (PNG, JPEG, GIF, BMP, TGA, SVG, QOI, ...) |
-| `Animation` | `Animation.load("walk.gif")`, `at(seconds)` → the `Surface` showing now (looping), `Animation[a, b, duration: 0.1]`, `save("blink.gif")` |
+| `Surface` | CPU pixels: `fill`, `fill_circle`, `[x, y]`, `blit`, `scaled`, `rotated`, `flipped`, `color_key=`, `save`/`Surface.load` (PNG, JPEG, GIF, WebP, AVIF, JPEG XL, BMP, TGA, SVG, QOI, ...) |
+| `Animation` | `Animation.load("walk.gif")` (or `.webp`, `.avifs`), `at(seconds)` → the `Surface` showing now (looping), `Animation[a, b, duration: 0.1]`, `save("blink.gif")` |
 | `Texture` | a `Surface` uploaded for fast drawing; `alpha=`, `color_mod=`, `blend_mode=` |
 | `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `FingerDown`, `Window`, ... are `Data` |
 | `Key`, `Keyboard`, `Mouse` | `Key.code(:space)`, `Keyboard.pressed?(:left)`, `Mouse.position` |

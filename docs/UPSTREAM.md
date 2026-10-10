@@ -61,9 +61,12 @@ has arrived so far, and what rbgame did about it:
   translation, pinned at the same revision as `sdl3` (`rake sdl:update`
   moves both). `Surface.load` and `Surface#save` go through it, so every
   format it reads and writes is rbgame's, and `Animation` wraps its
-  animation API (GIF, APNG, ANI, WebP). WebP (libwebp) and TIFF (libtiff's
-  reader) are translated too, and dav1d for AV1; the AVIF container and
-  JPEG XL are not yet, so AVIF files wait on upstream.
+  animation API (GIF, APNG, ANI, WebP, and AVIF image sequences for
+  loading). WebP (libwebp), TIFF (libtiff's reader), AVIF (libavif over
+  dav1d) and JPEG XL (libjxl's decoder) are translated too, so those load
+  with no change in rbgame; the tests decode the translation's own
+  sample pictures and sequence from `test/fixtures`. AVIF saving waits on
+  an AV1 encoder upstream.
 * **The GPU renderer** ("gpu", on SDL's GPU API with Vulkan and Direct3D
   12 backends) sits after "vulkan" in the renderer list, so OpenGL stays
   the default on a display and `Display.renderers` simply lists one more.
@@ -94,6 +97,11 @@ has arrived so far, and what rbgame did about it:
   the engines can follow when a game needs thousands of glyphs a frame.
 * **SDL_rtf.** `sdl3-rtf` renders RTF documents through `sdl3-ttf`; not
   game material, so not wrapped.
+* **SDL_shadercross.** `sdl3-shadercross` reflects SPIR-V and
+  cross-compiles it to MSL and HLSL for SDL's GPU API. rbgame draws
+  through the 2D renderer and has no GPU API of its own, so there is
+  nothing for a shader to attach to; it is not wrapped, and would come
+  with a GPU layer if one is ever wanted.
 * **SDL_net.** `sdl3-net` (TCP, UDP, address resolution) is not wrapped:
   Ruby's own `socket` library already does this for a Ruby game, and a
   native copy of it would add nothing.
