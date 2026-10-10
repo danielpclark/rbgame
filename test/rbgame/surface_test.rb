@@ -3,6 +3,7 @@
 require "test_helper"
 
 class SurfaceTest < Minitest::Test
+  FIXTURES = File.expand_path("../fixtures", __dir__)
   Surface = Rbgame::Surface
   Color = Rbgame::Color
 
@@ -110,6 +111,18 @@ class SurfaceTest < Minitest::Test
       loaded = Surface.load(path)
       assert_equal Rbgame::Vector[8, 8], loaded.size
       assert_equal Color::BLUE, loaded[4, 4]
+    end
+  end
+
+  # sample.avif and sample.jxl are the SDL translation's own 23x42 test
+  # pictures (sdl3-image/src/testdata/images), decoded here through its
+  # libavif, dav1d and libjxl translations.
+  def test_loads_avif_and_jpeg_xl
+    %w[sample.avif sample.jxl].each do |name|
+      loaded = Surface.load(File.join(FIXTURES, name))
+      assert_equal Rbgame::Vector[23, 42], loaded.size, name
+      assert_equal 255, loaded[11, 21].a, name
+      refute_equal loaded[0, 0], loaded[22, 41], "#{name} is a picture, not a flat fill"
     end
   end
 

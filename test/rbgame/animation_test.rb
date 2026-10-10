@@ -45,4 +45,14 @@ class AnimationTest < Minitest::Test
       assert_equal Color::BLUE, loaded.at(1.2)[1, 1]
     end
   end
+
+  # avif_anim.avifs is the SDL translation's own AVIF image sequence: three
+  # 24x16 frames of 7, 3 and 7 ms.
+  def test_loads_an_avif_sequence
+    loaded = Animation.load(File.expand_path("../fixtures/avif_anim.avifs", __dir__))
+    assert_equal 3, loaded.count
+    assert_equal Vector[24, 16], loaded.size
+    assert_equal [0.007, 0.003, 0.007], loaded.map(&:duration)
+    refute_equal loaded.at(0)[12, 8], loaded.at(0.008)[12, 8], "frames differ"
+  end
 end
