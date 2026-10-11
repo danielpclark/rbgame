@@ -27,6 +27,7 @@ mod input;
 mod mixer;
 mod music;
 mod renderer;
+mod sensor;
 mod surface;
 mod system;
 mod window;
@@ -54,6 +55,7 @@ pub extern "C" fn Init_rbgame_native() {
     surface::define(&mut native);
     gamepad::define(&mut native);
     camera::define(&mut native);
+    sensor::define(&mut native);
     music::define(&mut native);
     mixer::define(&mut native);
     font::define(&mut native);

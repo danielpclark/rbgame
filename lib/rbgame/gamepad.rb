@@ -10,6 +10,8 @@ module Rbgame
   #   pad.left_stick                  # => Vector, dead zone applied
   #   pad.trigger(:right)             # => 0.0..1.0
   #   pad.rumble(0.5, seconds: 0.2)
+  #   pad.enable(:gyroscope)          # pads with motion sensors, like a PS5's
+  #   pad.gyroscope                   # => Sensor::Reading(x, y, z) in rad/s
   #
   #   Events.each do |event|
   #     case event
@@ -27,6 +29,7 @@ module Rbgame
       misc2 misc3 misc4 misc5 misc6
     ].freeze
     AXES = %i[left_x left_y right_x right_y left_trigger right_trigger].freeze
+    SENSORS = %i[accelerometer gyroscope accelerometer_left gyroscope_left accelerometer_right gyroscope_right].freeze
     AXIS_RANGE = 32_767.0
     DEAD_ZONE = 0.15
 
@@ -51,6 +54,12 @@ module Rbgame
 
       def button_index(button) = BUTTONS.index(button.to_sym) || raise(ArgumentError, "unknown gamepad button #{button.inspect}")
       def axis_index(axis) = AXES.index(axis.to_sym) || raise(ArgumentError, "unknown gamepad axis #{axis.inspect}")
+
+      def sensor_index(sensor)
+        raise ArgumentError, "unknown gamepad sensor #{sensor.inspect}" unless SENSORS.include?(sensor.to_sym)
+
+        Sensor.type_index(sensor)
+      end
 
       private
 
@@ -94,6 +103,30 @@ module Rbgame
       native.set_led(color.r, color.g, color.b)
     end
 
+    # Motion sensors: `:accelerometer` (m/s^2) and `:gyroscope` (rad/s), plus
+    # the left and right halves of a split pad. Readings flow once enabled.
+    def sensor?(sensor) = native.has_sensor?(Gamepad.sensor_index(sensor))
+    def sensors = SENSORS.select { |sensor| sensor?(sensor) }
+    def enabled?(sensor) = native.sensor_enabled?(Gamepad.sensor_index(sensor))
+
+    # Readings per second, 0.0 when the pad does not say.
+    def sensor_rate(sensor) = native.sensor_rate(Gamepad.sensor_index(sensor))
+
+    def enable(*sensors)
+      sensors.each { |sensor| native.set_sensor_enabled(Gamepad.sensor_index(sensor), true) }
+      self
+    end
+
+    def disable(*sensors)
+      sensors.each { |sensor| native.set_sensor_enabled(Gamepad.sensor_index(sensor), false) }
+      self
+    end
+
+    # The latest reading of a sensor, zero until it is enabled and has reported.
+    def reading(sensor) = Sensor::Reading.from(native.sensor_data(Gamepad.sensor_index(sensor)))
+    def accelerometer = reading(:accelerometer)
+    def gyroscope = reading(:gyroscope)
+
     def close
       native.close
       self
@@ -133,6 +166,15 @@ module Rbgame
       def led=(_color)
         false
       end
+      def sensor?(_sensor) = false
+      def sensors = []
+      def enabled?(_sensor) = false
+      def sensor_rate(_sensor) = 0.0
+      def enable(*) = self
+      def disable(*) = self
+      def reading(_sensor) = Sensor::Reading::ZERO
+      def accelerometer = Sensor::Reading::ZERO
+      def gyroscope = Sensor::Reading::ZERO
       def close = self
       def inspect = "#<Rbgame::Gamepad::None>"
     end
@@ -145,8 +187,9 @@ module Rbgame
     #   Events.pump                   # now pad.gamepad reads the new state
     #   pad.detach
     #
-    # It has the fifteen standard buttons (`:south` to `:dpad_right`) and
-    # the six axes, and is already open (`gamepad`), so its events arrive.
+    # It has the fifteen standard buttons (`:south` to `:dpad_right`), the
+    # six axes and an accelerometer and gyroscope (`tilt`), and is already
+    # open (`gamepad`), so its events arrive.
     class Virtual
       TRIGGERS = %i[left_trigger right_trigger].freeze
 
@@ -180,6 +223,10 @@ module Rbgame
         BUTTONS.first(15).each { |button| release(button) }
         self
       end
+
+      # A reading from the pad's accelerometer or gyroscope, delivered on the
+      # next pump once `gamepad.enable(sensor)` has asked for it.
+      def tilt(sensor, x, y, z, at: Clock.now) = tap { native.send_sensor(Gamepad.sensor_index(sensor), (at * 1_000_000_000).round, [x, y, z]) }
 
       def detach = tap { native.detach }
     end

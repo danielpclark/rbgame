@@ -227,6 +227,15 @@ module Rbgame
     def rumble: (Numeric low, ?Numeric high, ?seconds: Numeric) -> bool
     def rumble_triggers: (Numeric left, ?Numeric right, ?seconds: Numeric) -> bool
     def led=: (colorish) -> void
+    def sensor?: (Symbol | String) -> bool
+    def sensors: () -> Array[Symbol]
+    def enabled?: (Symbol | String) -> bool
+    def sensor_rate: (Symbol | String) -> Float
+    def enable: (*Symbol | String) -> self
+    def disable: (*Symbol | String) -> self
+    def reading: (Symbol | String) -> Sensor::Reading
+    def accelerometer: () -> Sensor::Reading
+    def gyroscope: () -> Sensor::Reading
     def close: () -> self
 
     class None
@@ -247,6 +256,15 @@ module Rbgame
       def rumble: (Numeric low, ?Numeric? high, ?seconds: Numeric?) -> bool
       def rumble_triggers: (Numeric left, ?Numeric? right, ?seconds: Numeric?) -> bool
       def led=: (colorish) -> void
+      def sensor?: (Symbol | String) -> bool
+      def sensors: () -> Array[Symbol]
+      def enabled?: (Symbol | String) -> bool
+      def sensor_rate: (Symbol | String) -> Float
+      def enable: (*untyped) -> self
+      def disable: (*untyped) -> self
+      def reading: (Symbol | String) -> Sensor::Reading
+      def accelerometer: () -> Sensor::Reading
+      def gyroscope: () -> Sensor::Reading
       def close: () -> self
     end
 
@@ -259,6 +277,7 @@ module Rbgame
       def press: (Symbol | String) -> self
       def release: (Symbol | String) -> self
       def move: (Symbol | String axis, Numeric value) -> self
+      def tilt: (Symbol | String sensor, Numeric x, Numeric y, Numeric z, ?at: Numeric) -> self
       def detach: () -> self
     end
   end
@@ -341,6 +360,99 @@ module Rbgame
     def outline: () -> Integer
     def measure: (untyped string, ?wrap: Numeric?) -> Vector
     def render: (untyped string, ?color: colorish, ?wrap: Numeric?) -> Surface
+  end
+
+  class Sensor
+    TYPES: Array[Symbol]
+    GRAVITY: Float
+
+    class Reading
+      attr_reader x: Float
+      attr_reader y: Float
+      attr_reader z: Float
+      def self.new: (x: Float, y: Float, z: Float) -> Reading
+      def self.[]: (Numeric, Numeric, Numeric) -> Reading
+      def self.from: (Array[Numeric]) -> Reading
+      ZERO: Reading
+      def to_a: () -> Array[Float]
+      def magnitude: () -> Float
+      def at_rest?: (?tolerance: Float) -> bool
+      def to_s: () -> String
+    end
+
+    extend Enumerable[Sensor]
+    def self.all: () -> Array[Sensor]
+    def self.each: () { (Sensor) -> void } -> Array[Sensor]
+    def self.first: () -> (Sensor | None)
+    def self.any?: () -> bool
+    def self.find: (Integer id) -> (Sensor | None)
+    def self.accelerometers: () -> Array[Sensor]
+    def self.gyroscopes: () -> Array[Sensor]
+    def self.type_index: (Symbol | String) -> Integer
+
+    attr_reader native: untyped
+    def initialize: (untyped native) -> void
+    def id: () -> Integer
+    def name: () -> String
+    def type: () -> Symbol
+    def accelerometer?: () -> bool
+    def gyroscope?: () -> bool
+    def none?: () -> bool
+    def reading: () -> Reading
+    def values: (?Integer count) -> Array[Float]
+    def close: () -> self
+
+    class None
+      def id: () -> nil
+      def name: () -> String
+      def type: () -> Symbol
+      def accelerometer?: () -> bool
+      def gyroscope?: () -> bool
+      def none?: () -> bool
+      def reading: () -> Reading
+      def values: (?Integer count) -> Array[Float]
+      def close: () -> self
+    end
+  end
+
+  module Power
+    STATES: Array[Symbol]
+    PLUGGED_IN: Array[Symbol]
+
+    class Status
+      attr_reader state: Symbol
+      attr_reader seconds_left: Integer?
+      attr_reader percent: Integer?
+      def self.new: (state: Symbol, seconds_left: Integer?, percent: Integer?) -> Status
+      def on_battery?: () -> bool
+      def plugged_in?: () -> bool
+      def charging?: () -> bool
+      def charged?: () -> bool
+      def battery?: () -> bool
+      def known?: () -> bool
+      def low?: (?below: Float) -> bool
+      def time_left: () -> Float?
+      def to_s: () -> String
+    end
+
+    def self.status: () -> Status
+    def self.state: () -> Symbol
+    def self.percent: () -> Integer?
+    def self.on_battery?: () -> bool
+    def self.plugged_in?: () -> bool
+  end
+
+  class Locale
+    attr_reader language: String
+    attr_reader country: String?
+    def self.new: (language: String, country: String?) -> Locale
+    def self.preferred: () -> Array[Locale]
+    def self.first: () -> Locale
+    def self.pick: (Array[String | Symbol] available, ?fallback: untyped) -> untyped
+    DEFAULT: Locale
+    def tag: () -> String
+    def to_s: () -> String
+    def match?: (untyped other) -> bool
   end
 
   module Clipboard
@@ -498,6 +610,21 @@ module Rbgame
       attr_reader raw_value: Integer
       def axis: () -> Symbol?
       def value: () -> Float
+    end
+    class GamepadSensor < GamepadAdded
+      attr_reader sensor_number: Integer
+      attr_reader values: Array[Float]
+      attr_reader sensor_timestamp_ns: Integer
+      def sensor: () -> Symbol?
+      def reading: () -> Sensor::Reading
+    end
+    class SensorUpdate
+      attr_reader timestamp_ns: Integer
+      attr_reader which: Integer
+      attr_reader values: Array[Float]
+      attr_reader sensor_timestamp_ns: Integer
+      def sensor: () -> (Sensor | Sensor::None)
+      def reading: () -> Sensor::Reading
     end
     class CameraAdded
       attr_reader timestamp_ns: Integer

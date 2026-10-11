@@ -109,12 +109,32 @@ has arrived so far, and what rbgame did about it:
 * **SDL_net.** `sdl3-net` (TCP, UDP, address resolution) is not wrapped:
   Ruby's own `socket` library already does this for a Ruby game, and a
   native copy of it would add nothing.
+* **Power, locale and sensors.** The power dispatcher got its Linux
+  (UPower, sysfs, `/proc/acpi`, `/proc/apm`) and Windows backends, so
+  `Rbgame::Power` (`lib/rbgame/power.rb`) reads the battery; the locale
+  list (`LANGUAGE`/`LANG` on Unix, the UI languages on Windows) is
+  `Rbgame::Locale`; the sensor layer got its Windows driver, which
+  `Rbgame::Sensor` (`src/sensor.rs`, `lib/rbgame/sensor.rb`) wraps, with
+  `Sensor::None` on Linux where only the dummy driver exists. Gamepad
+  sensors (the joystick layer's accelerometers and gyroscopes) are
+  `Gamepad#enable`, `#gyroscope`, `#accelerometer` and
+  `Event::GamepadSensor`; `Gamepad::Virtual#tilt` sends readings through
+  SDL's virtual joystick, which is how the tests see real values. The
+  tests read the locale list in child processes because SDL snapshots the
+  environment when it starts.
+* **Platform plumbing rbgame does not need.** The Unix and Windows time,
+  timer and filesystem backends sit under what `Clock` and SDL's own
+  loading already use; `sdl3::process` and `sdl3::time` duplicate Ruby's
+  `Process` and `Time`; `sdl3::misc::open_url` is Ruby's `system` or a
+  gem away. Renderer internals (wrapping existing GL, Vulkan and Direct3D
+  textures and objects, OpenGL ES 3 shaders, GPU renderers without a
+  window) change nothing a Ruby game can see.
 * **Not wrapped, and why.** Haptics: `Gamepad#rumble` covers what games
   use; SDL's effect API (springs, ramps, custom waveforms) can follow on
-  request. Sensors and power status: only dummy drivers upstream, so
-  nothing to read yet. Dialogs, notifications and message boxes: desktop
-  integration through portals and zenity, not game loop material; they
-  can be wrapped when wanted.
+  request. Dialogs, notifications, trays and message boxes: desktop
+  integration (portals and zenity on Unix, `IFileDialog`, toasts and the
+  notification area on Windows), not game loop material; they can be
+  wrapped when wanted.
 
 The rule for an update that brings a new subsystem: wrap it. A capability
 that is only in the crate is not in rbgame; it gets a thin native class, a

@@ -143,6 +143,27 @@ module Rbgame
         super.merge(axis: axis, value: value)
       end
     end
+
+    # A motion sensor reading from a gamepad with sensors enabled.
+    GamepadSensor = Data.define(:timestamp_ns, :which, :sensor_number, :values, :sensor_timestamp_ns) do
+      include Gamepadish
+      def sensor = Sensor::TYPES[sensor_number]
+      def reading = Sensor::Reading.from(values)
+
+      def deconstruct_keys(keys)
+        super.merge(sensor: sensor, reading: reading)
+      end
+    end
+
+    # A reading from one of the machine's own sensors (`Sensor`).
+    SensorUpdate = Data.define(:timestamp_ns, :which, :values, :sensor_timestamp_ns) do
+      def sensor = Sensor.find(which)
+      def reading = Sensor::Reading.from(values)
+
+      def deconstruct_keys(keys)
+        super(nil).merge(sensor: sensor, reading: reading)
+      end
+    end
     User = Data.define(:timestamp_ns, :window_id, :code)
     Unknown = Data.define(:timestamp_ns, :window_id, :raw_type, :description)
 
@@ -152,7 +173,7 @@ module Rbgame
       window: Window, drop: Drop, user: User,
       gamepad_added: GamepadAdded, gamepad_removed: GamepadRemoved,
       gamepad_button_down: GamepadButtonDown, gamepad_button_up: GamepadButtonUp,
-      gamepad_axis_motion: GamepadAxisMotion,
+      gamepad_axis_motion: GamepadAxisMotion, gamepad_sensor: GamepadSensor, sensor_update: SensorUpdate,
       camera_added: CameraAdded, camera_removed: CameraRemoved,
       camera_approved: CameraApproved, camera_denied: CameraDenied,
       clipboard_update: ClipboardUpdate,
@@ -160,7 +181,7 @@ module Rbgame
       other: Unknown
     }.freeze
 
-    RENAMED_FIELDS = { button: :button_number, axis: :axis_number }.freeze
+    RENAMED_FIELDS = { button: :button_number, axis: :axis_number, sensor: :sensor_number }.freeze
 
     class << self
       # The Event for a Hash from Rbgame::Native.
