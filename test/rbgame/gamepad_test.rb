@@ -150,4 +150,45 @@ class GamepadTest < Minitest::Test
     refute none.rumble(1.0)
     assert_equal "no gamepad", none.name
   end
+
+  def test_motion_sensors_read_back_once_enabled
+    assert pad.sensor?(:gyroscope)
+    assert pad.sensor?(:accelerometer)
+    refute pad.sensor?(:gyroscope_left)
+    assert_equal %i[accelerometer gyroscope], pad.sensors
+    refute pad.enabled?(:gyroscope)
+    assert_equal 0.0, pad.sensor_rate(:gyroscope)
+    assert_raises(ArgumentError) { pad.sensor?(:barometer) }
+
+    @virtual.tilt(:gyroscope, 0.1, 0.2, 0.3)
+    settle
+    assert_equal Rbgame::Sensor::Reading::ZERO, pad.gyroscope, "nothing arrives before the sensor is enabled"
+
+    pad.enable(:gyroscope, :accelerometer)
+    assert pad.enabled?(:gyroscope)
+    @virtual.tilt(:gyroscope, 0.1, 0.2, 0.3).tilt(:accelerometer, 0, Rbgame::Sensor::GRAVITY, 0)
+    Events.pump
+    events = Events.grep(Event::GamepadSensor)
+    gyro = events.find { |event| event.sensor == :gyroscope }
+    assert_in_delta 0.2, gyro.reading.y, 0.0001
+    assert_same pad, gyro.gamepad
+    case gyro
+    in Event::GamepadSensor[sensor: :gyroscope, reading:] then assert_in_delta 0.3, reading.z, 0.0001
+    end
+    assert_in_delta 0.1, pad.gyroscope.x, 0.0001
+    assert_in_delta Rbgame::Sensor::GRAVITY, pad.accelerometer.magnitude, 0.001
+    assert_in_delta Rbgame::Sensor::GRAVITY, pad.reading(:accelerometer).y, 0.001
+
+    pad.disable(:gyroscope)
+    refute pad.enabled?(:gyroscope)
+    assert pad.enabled?(:accelerometer)
+  end
+
+  def test_none_has_no_sensors
+    none = Gamepad::None.new
+    refute none.sensor?(:gyroscope)
+    assert_equal [], none.sensors
+    assert_same none, none.enable(:gyroscope)
+    assert_equal Rbgame::Sensor::Reading::ZERO, none.gyroscope
+  end
 end

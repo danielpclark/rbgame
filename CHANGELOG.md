@@ -28,6 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `GamepadRemoved`, `GamepadButtonDown`/`Up` and `GamepadAxisMotion`;
   `Gamepad::Virtual`, a pretend pad for tests and demos.
 
+- `Rbgame::Power`: `Power.status` with the state (`:on_battery`,
+  `:charging`, `:charged`, `:no_battery`, `:unknown`), seconds and percent
+  left, and `low?`, `on_battery?`, `plugged_in?`.
+- `Rbgame::Locale`: `Locale.preferred`, `Locale.first` and
+  `Locale.pick(available)` for choosing a game's language.
+- `Rbgame::Sensor`: the machine's accelerometers and gyroscopes with
+  `Sensor::Reading` values, `Sensor::None` when there are none, and
+  `Event::SensorUpdate`; `Gamepad#enable(:gyroscope)`, `#gyroscope`,
+  `#accelerometer`, `#sensors` and `Event::GamepadSensor` for pads with
+  motion sensors, and `Gamepad::Virtual#tilt` to fake them.
+
 ### Fixed
 - `Events.each` (and so `Events.any?`, `to_a`, `grep`) yields everything
   queued: an `Events.wait` that returned an event left SDL's cycle-ending
@@ -41,6 +52,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `Mixer#channels`, `Mixer.offline(rate:, channels:)` with `render(seconds)`
   for mixing into a `Sound`. `Mixer.new(output:)` and `Mixer#queued` are
   gone; `Mixer::Silence` stands in for the whole mixer without a device.
+- SDL translation updated to `f261c1b6` (21 upstream commits): the Linux
+  and Windows power backends, the Unix and Windows time, timer, locale,
+  URL and filesystem backends, the Windows process, dialog, notification,
+  tray and sensor backends, and renderer work (wrapped GL, Vulkan and
+  Direct3D textures and objects, OpenGL ES 3 shaders, GPU renderers
+  without a window) that changes nothing rbgame draws.
 - SDL translation updated to `58cc3d9b` (21 upstream commits): APNG
   decoding and encoding (libpng and zlib translated) in `sdl3-image`, so
   `Animation.load` and `save` handle `.png`/`.apng` losslessly; in

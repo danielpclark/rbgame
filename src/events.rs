@@ -150,6 +150,19 @@ pub fn event_to_hash(event: Event) -> Hash {
             put(&mut hash, "axis", Fixnum::new(axis.axis as i64));
             put(&mut hash, "raw_value", Fixnum::new(axis.value as i64));
         }
+        Event::GamepadSensor(sensor) => {
+            put_type(&mut hash, "gamepad_sensor");
+            put(&mut hash, "which", Fixnum::new(sensor.which as i64));
+            put(&mut hash, "sensor", Fixnum::new(sensor.sensor as i64));
+            put(&mut hash, "values", crate::sensor::floats(sensor.data));
+            put(&mut hash, "sensor_timestamp_ns", Fixnum::new(sensor.sensor_timestamp as i64));
+        }
+        Event::Sensor(sensor) => {
+            put_type(&mut hash, "sensor_update");
+            put(&mut hash, "which", Fixnum::new(sensor.which as i64));
+            put(&mut hash, "values", crate::sensor::floats(sensor.data));
+            put(&mut hash, "sensor_timestamp_ns", Fixnum::new(sensor.sensor_timestamp as i64));
+        }
         Event::CameraDevice(device) if camera_event_name(device.event_type).is_some() => {
             put_type(&mut hash, camera_event_name(device.event_type).unwrap_or("other"));
             put(&mut hash, "which", Fixnum::new(device.which as i64));

@@ -3,14 +3,16 @@
 //! as SDL's indexes; `Rbgame::Gamepad` names them.
 //!
 //! `Rbgame::Native::VirtualGamepad` is a pretend controller SDL treats as a
-//! real one, so tests and demos can press its buttons.
+//! real one, so tests and demos can press its buttons and tilt its sensors.
 
-use rutie::{AnyObject, Array, Boolean, Fixnum, NilClass, Object, RString};
+use rutie::{AnyObject, Array, Boolean, Fixnum, Float, NilClass, Object, RString};
 use sdl3::gamepad::{Gamepad, GamepadAxis, GamepadButton};
 use sdl3::events::JoystickID;
-use sdl3::joystick::{attach_virtual_joystick, detach_virtual_joystick, Joystick, JoystickType, VirtualJoystickDesc};
+use sdl3::joystick::{attach_virtual_joystick, detach_virtual_joystick, Joystick, JoystickType, VirtualJoystickDesc, VirtualJoystickSensorDesc};
+use sdl3::sensor::SensorType;
 
-use crate::support::{i32_of, i64_of, ints_array, native, opt_string, raise_arg, raise_state, str_of, truthy, u8_of, OrRaise};
+use crate::sensor::{floats, sensor_type_of};
+use crate::support::{f32s_of, i32_of, i64_of, ints_array, native, opt_string, raise_arg, raise_state, str_of, truthy, u8_of, OrRaise};
 
 pub struct GamepadBox {
     gamepad: Option<Gamepad>,
@@ -83,10 +85,12 @@ methods!(
     }
 
     fn vpad_attach(name: RString) -> AnyObject {
+        let sensor = |sensor_type| VirtualJoystickSensorDesc { sensor_type, rate: 0.0 };
         let desc = VirtualJoystickDesc {
             joystick_type: JoystickType::Gamepad,
             naxes: VIRTUAL_AXES,
             nbuttons: VIRTUAL_BUTTONS,
+            sensors: vec![sensor(SensorType::Accel), sensor(SensorType::Gyro)],
             name: Some(str_of(name)),
             ..VirtualJoystickDesc::default()
         };
@@ -156,6 +160,33 @@ methods!(
         Boolean::new(rtself.gamepad().set_led(r, g, b).is_ok())
     }
 
+    // Sensor types are SDL's numbers; see `Rbgame::Sensor::TYPES`.
+    fn pad_has_sensor(index: AnyObject) -> Boolean {
+        Boolean::new(rtself.gamepad().has_sensor(sensor_type_of(i32_of(index, "sensor"))))
+    }
+
+    fn pad_set_sensor_enabled(index: AnyObject, enabled: AnyObject) -> NilClass {
+        let sensor_type = sensor_type_of(i32_of(index, "sensor"));
+        rtself.gamepad().set_sensor_enabled(sensor_type, truthy(enabled)).or_raise();
+        NilClass::new()
+    }
+
+    fn pad_sensor_enabled(index: AnyObject) -> Boolean {
+        Boolean::new(rtself.gamepad().sensor_enabled(sensor_type_of(i32_of(index, "sensor"))))
+    }
+
+    // Readings per second, 0.0 when unknown.
+    fn pad_sensor_rate(index: AnyObject) -> Float {
+        Float::new(rtself.gamepad().sensor_data_rate(sensor_type_of(i32_of(index, "sensor"))) as f64)
+    }
+
+    // The latest [x, y, z] of a sensor: m/s^2 for accelerometers, rad/s for gyroscopes.
+    fn pad_sensor_data(index: AnyObject) -> Array {
+        let mut data = [0.0f32; 3];
+        rtself.gamepad().sensor_data(sensor_type_of(i32_of(index, "sensor")), &mut data).or_raise();
+        floats(data)
+    }
+
     fn pad_close() -> NilClass {
         rtself.get_data_mut(&*GAMEPAD_WRAPPER).gamepad = None;
         NilClass::new()
@@ -190,6 +221,19 @@ methods!(
         NilClass::new()
     }
 
+    // A reading from one of the pad's sensors (accelerometer or gyroscope),
+    // delivered on the next pump once the pad has that sensor enabled.
+    fn vpad_send_sensor(index: AnyObject, timestamp_ns: AnyObject, values: Array) -> NilClass {
+        let sensor_type = sensor_type_of(i32_of(index, "sensor"));
+        let timestamp = i64_of(timestamp_ns, "timestamp_ns").max(0) as u64;
+        let values = f32s_of(values, "values");
+        if values.len() != 3 {
+            raise_arg("a sensor reading has three values");
+        }
+        rtself.joystick().send_virtual_sensor_data(sensor_type, timestamp, &values).or_raise();
+        NilClass::new()
+    }
+
     fn vpad_detach() -> NilClass {
         let data = rtself.get_data_mut(&*VIRTUAL_WRAPPER);
         if data.joystick.take().is_some() {
@@ -216,6 +260,11 @@ pub fn define(native: &mut rutie::Module) {
     klass.def("rumble", pad_rumble);
     klass.def("rumble_triggers", pad_rumble_triggers);
     klass.def("set_led", pad_set_led);
+    klass.def("has_sensor?", pad_has_sensor);
+    klass.def("set_sensor_enabled", pad_set_sensor_enabled);
+    klass.def("sensor_enabled?", pad_sensor_enabled);
+    klass.def("sensor_rate", pad_sensor_rate);
+    klass.def("sensor_data", pad_sensor_data);
     klass.def("close", pad_close);
 
     let mut virtual_klass = native.define_nested_class("VirtualGamepad", None);
@@ -224,5 +273,6 @@ pub fn define(native: &mut rutie::Module) {
     virtual_klass.def("id", vpad_id);
     virtual_klass.def("set_button", vpad_set_button);
     virtual_klass.def("set_axis", vpad_set_axis);
+    virtual_klass.def("send_sensor", vpad_send_sensor);
     virtual_klass.def("detach", vpad_detach);
 }

@@ -140,8 +140,14 @@ backends, and rbgame uses them as they land:
   with OpenType SVG glyphs in their own colours (PlutoSVG), and
   `screen.text(..., font: font)` draws with it. SDL's 8x8 debug font
   remains the default when no font is given.
-* **Still missing upstream**: the macOS backends, platform sensors and
-  power status (only dummy drivers so far).
+* **The machine itself**: `Power.status` reads the battery (UPower, sysfs
+  and the ACPI files on Linux, the system power status on Windows),
+  `Locale.preferred` the user's languages, and `Sensor.all` the platform's
+  own motion sensors (Windows' Sensor API; Linux reports none). Gamepads
+  with motion sensors, a PlayStation or Switch pad say, report them
+  through `Gamepad#gyroscope` and `#accelerometer` once enabled, and
+  `Gamepad::Virtual#tilt` fakes them for tests.
+* **Still missing upstream**: the macOS backends.
 
 `docs/UPSTREAM.md` explains how rbgame follows that project.
 
@@ -194,9 +200,10 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Texture` | a `Surface` uploaded for fast drawing; `alpha=`, `color_mod=`, `blend_mode=` |
 | `Events` | `each`, `poll`, `wait(timeout:)`, `push_quit`; `Event::KeyDown`, `MouseDown`, `FingerDown`, `Window`, ... are `Data` |
 | `Key`, `Keyboard`, `Mouse` | `Key.code(:space)`, `Keyboard.pressed?(:left)`, `Mouse.position` |
-| `Gamepad` | `Gamepad.first` (or `Gamepad::None`), `pressed?(:south)`, `left_stick`, `trigger(:right)`, `rumble`; `Event::GamepadButtonDown[button: :start]`; `Gamepad::Virtual` for tests |
+| `Gamepad` | `Gamepad.first` (or `Gamepad::None`), `pressed?(:south)`, `left_stick`, `trigger(:right)`, `rumble`, `enable(:gyroscope)` then `gyroscope` → `Sensor::Reading`; `Event::GamepadButtonDown[button: :start]`, `Event::GamepadSensor[sensor: :gyroscope, reading:]`; `Gamepad::Virtual` for tests |
 | `Camera` | `Camera.open(size: [640, 480])` (or `Camera::None`), `frame` → `Surface`, `approved?`; `Event::CameraApproved` |
 | `Clipboard` | `Clipboard.text`, `Clipboard.text=`, `Clipboard.image`; `Event::ClipboardUpdate` |
+| `Power`, `Locale`, `Sensor` | `Power.status` → `state`, `percent`, `low?`; `Locale.preferred`, `Locale.pick(%w[en fr])`; `Sensor.first` (or `Sensor::None`), `reading` → `(x, y, z)`; `Event::SensorUpdate` |
 | `Font` | `Font.load(path, size: 24)` (TrueType, OpenType, Type 1, ...), `render(text, color:, wrap:)` → `Surface`, `measure`, `style = %i[bold italic]`, `outline=`; `screen.text(text, at:, font:, align: :center)` |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
