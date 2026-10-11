@@ -41,6 +41,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `Mixer#channels`, `Mixer.offline(rate:, channels:)` with `render(seconds)`
   for mixing into a `Sound`. `Mixer.new(output:)` and `Mixer#queued` are
   gone; `Mixer::Silence` stands in for the whole mixer without a device.
+- SDL translation updated to `58cc3d9b` (21 upstream commits): APNG
+  decoding and encoding (libpng and zlib translated) in `sdl3-image`, so
+  `Animation.load` and `save` handle `.png`/`.apng` losslessly; in
+  `sdl3-ttf`, FreeType's Type 1, CID, Type 42, PFR, Windows FNT, PCF and
+  BDF drivers, HarfBuzz's AAT shaping and FreeType's OT-SVG renderer with
+  PlutoSVG, so `Font.load` reads those formats and renders OpenType SVG
+  glyphs in colour; the Direct3D 12 renderer (Windows, after Direct3D 11
+  in SDL's list).
 - SDL translation updated to `5c1c24fb` (20 upstream commits): AVIF images
   and image sequences (libavif over dav1d) and JPEG XL (libjxl) decoding in
   `sdl3-image`, so `Surface.load` reads `.avif` and `.jxl` and
