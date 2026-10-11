@@ -55,4 +55,16 @@ class AnimationTest < Minitest::Test
     assert_equal [0.007, 0.003, 0.007], loaded.map(&:duration)
     refute_equal loaded.at(0)[12, 8], loaded.at(0.008)[12, 8], "frames differ"
   end
+
+  def test_saves_and_loads_an_apng_losslessly
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "blink.png")
+      @blink.save(path)
+      loaded = Animation.load(path)
+      assert_equal 3, loaded.count
+      assert_equal [0.5, 0.5, 0.5], loaded.map(&:duration)
+      assert_equal [Color::RED, Color::GREEN, Color::BLUE], loaded.frames.map { |f| f.surface[2, 2] }
+      assert_equal Color::RED, Surface.load(path)[2, 2], "a still PNG reader sees the first frame"
+    end
+  end
 end

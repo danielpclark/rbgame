@@ -105,8 +105,8 @@ backends, and rbgame uses them as they land:
   falls back to SDL's `offscreen` driver, draws into a framebuffer, and can
   read it back (`screen.to_surface`, `screen.screenshot`), which is how the
   rest of the tests and the Gorillas recorder run.
-* **Drawing**: SDL's OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 renderers
-  are translated, and SDL picks the first that works on the window (OpenGL
+* **Drawing**: SDL's OpenGL, OpenGL ES 2.0, Vulkan, Direct3D 11 and Direct3D
+  12 renderers are translated, and SDL picks the first that works on the window (OpenGL
   on X11 with Mesa, which is what CI runs on). `Display.set_mode(driver:
   "software")` asks for the software renderer instead; `Display.renderers`
   lists the choices.
@@ -134,8 +134,11 @@ backends, and rbgame uses them as they land:
   `Surface`. The clipboard and touch events are wrapped too.
 * **Fonts**: SDL_ttf is translated with the FreeType and HarfBuzz it
   bundles (`sdl3-ttf`), so `Font.load("DejaVuSans.ttf", size: 24)` renders
-  TrueType and OpenType text, shaped for every script HarfBuzz handles,
-  and `screen.text(..., font: font)` draws with it. SDL's 8x8 debug font
+  TrueType and OpenType text (and Type 1, CID, Type 42, PFR, Windows FNT,
+  PCF and BDF fonts, every format FreeType reads), shaped for every script
+  HarfBuzz handles through OpenType or Apple Advanced Typography tables,
+  with OpenType SVG glyphs in their own colours (PlutoSVG), and
+  `screen.text(..., font: font)` draws with it. SDL's 8x8 debug font
   remains the default when no font is given.
 * **Still missing upstream**: the macOS backends, platform sensors and
   power status (only dummy drivers so far).
@@ -194,7 +197,7 @@ scenes draw it and feed it input. Read it as a worked example of the API.
 | `Gamepad` | `Gamepad.first` (or `Gamepad::None`), `pressed?(:south)`, `left_stick`, `trigger(:right)`, `rumble`; `Event::GamepadButtonDown[button: :start]`; `Gamepad::Virtual` for tests |
 | `Camera` | `Camera.open(size: [640, 480])` (or `Camera::None`), `frame` → `Surface`, `approved?`; `Event::CameraApproved` |
 | `Clipboard` | `Clipboard.text`, `Clipboard.text=`, `Clipboard.image`; `Event::ClipboardUpdate` |
-| `Font` | `Font.load(path, size: 24)`, `render(text, color:, wrap:)` → `Surface`, `measure`, `style = %i[bold italic]`, `outline=`; `screen.text(text, at:, font:, align: :center)` |
+| `Font` | `Font.load(path, size: 24)` (TrueType, OpenType, Type 1, ...), `render(text, color:, wrap:)` → `Surface`, `measure`, `style = %i[bold italic]`, `outline=`; `screen.text(text, at:, font:, align: :center)` |
 | `Clock` | `tick(fps)` → seconds, `fps`, `Clock.now`, `Clock.sleep` |
 | `Color`, `Vector`, `Rect` | immutable values with the geometry you expect; `Color::EGA[14]` for the palette QBasic had |
 | `Sound`, `Mixer`, `Synth` | clips from any sound file or from samples; `sound.play(volume: 0.5, pan: -1, loops: :forever)` → a `Channel`, as many at once as you like; `Mixer.offline` mixes into a `Sound`; `Synth.play("T160 O1 L8 CDEDCD L4 ECC")` |
@@ -228,5 +231,7 @@ option. The SDL translation it builds on is zlib-licensed, like SDL. Its
 FreeType, which asks for this credit: Portions of this software are
 copyright © 2023 The FreeType Project (www.freetype.org). All rights
 reserved. Its HarfBuzz translation is under HarfBuzz's MIT license and its
-Unicode tables under the Unicode License. The test suite's DejaVu Sans
-Mono font is under the Bitstream Vera license (`test/fixtures`).
+Unicode tables under the Unicode License; its PlutoSVG and PlutoVG
+translations and FreeType's BDF and PCF drivers are under their own MIT
+licenses. The test suite's DejaVu fonts are under the Bitstream Vera and
+Arev licenses (`test/fixtures/DejaVu-LICENSE.txt`).

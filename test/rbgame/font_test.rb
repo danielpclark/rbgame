@@ -2,8 +2,8 @@
 
 require "test_helper"
 
-# Renders with a real font (DejaVu Sans Mono, vendored under test/fixtures
-# with its license) and reads the pixels back.
+# Renders with real fonts (DejaVu subsets vendored under test/fixtures with
+# their license) and reads the pixels back.
 class FontTest < Minitest::Test
   Font = Rbgame::Font
   Color = Rbgame::Color
@@ -78,5 +78,30 @@ class FontTest < Minitest::Test
     assert right > 20, "red text right-aligned to x=190"
     assert_equal width, screen.text_width("Go!", font: @font)
     assert_equal @font.height, screen.text_height(font: @font)
+  end
+
+  # DejaVuSans.pfb is a Type 1 (PFB) subset of DejaVu Sans made by the SDL
+  # translation's test data tools; FreeType's type1 driver reads it.
+  def test_loads_a_type_1_font
+    font = Font.load(File.expand_path("../fixtures/DejaVuSans.pfb", __dir__), size: 20)
+    assert_equal "DejaVu Sans", font.family
+    refute font.fixed_width?
+    rendered = font.render("Ag", color: :white)
+    assert rendered.width > 10
+    inked = (0...rendered.width).to_a.product((0...rendered.height).to_a).count { |x, y| rendered[x, y].a > 200 }
+    assert inked > 20, "Type 1 glyphs put ink on the surface"
+  end
+
+  # DejaVuSans-SVG.ttf carries OpenType SVG documents for some glyphs; its
+  # "Q" is a brown disc with a yellow centre, drawn in its own colours.
+  def test_renders_svg_colour_glyphs_in_their_own_colours
+    font = Font.load(File.expand_path("../fixtures/DejaVuSans-SVG.ttf", __dir__), size: 40)
+    rendered = font.render("Q", color: :white)
+    colours = (0...rendered.width).to_a.product((0...rendered.height).to_a)
+                                    .map { |x, y| rendered[x, y] }.select { |c| c.a > 200 }.map { |c| [c.r, c.g, c.b] }.uniq
+    assert_includes colours, [0x99, 0x66, 0x33], "the disc's brown"
+    assert_includes colours, [0xff, 0xcc, 0x66], "the centre's yellow"
+    plain = font.render("A", color: :white)
+    assert plain.width > 0
   end
 end

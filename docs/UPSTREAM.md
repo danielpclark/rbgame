@@ -36,8 +36,8 @@ has arrived so far, and what rbgame did about it:
   and `Subsystems::Video`), so X11 and Wayland were picked up with no code
   change; CI runs the suites on X11 under Xvfb. Still to come: Cocoa, the
   mobile and console backends.
-* **GPU renderers.** OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 (Windows)
-  are translated and come before `software` in SDL's list, so a window on a
+* **GPU renderers.** OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 and 12
+  (Windows) are translated and come before `software` in SDL's list, so a window on a
   display now draws through the GPU (OpenGL on Mesa's llvmpipe under Xvfb in
   CI, where the suites pass pixel for pixel as they did in software).
   `Display.set_mode(driver: ...)` still passes a renderer name through, and
@@ -63,7 +63,8 @@ has arrived so far, and what rbgame did about it:
   format it reads and writes is rbgame's, and `Animation` wraps its
   animation API (GIF, APNG, ANI, WebP, and AVIF image sequences for
   loading). WebP (libwebp), TIFF (libtiff's reader), AVIF (libavif over
-  dav1d) and JPEG XL (libjxl's decoder) are translated too, so those load
+  dav1d), JPEG XL (libjxl's decoder) and APNG (libpng with zlib, decoding
+  and encoding) are translated too, so those load
   with no change in rbgame; the tests decode the translation's own
   sample pictures and sequence from `test/fixtures`. AVIF saving waits on
   an AV1 encoder upstream.
@@ -88,11 +89,14 @@ has arrived so far, and what rbgame did about it:
   video layer has had all along.
 * **Fonts.** `sdl3-ttf` (pinned with the others) is SDL_ttf with the
   FreeType and HarfBuzz it bundles, translated. `Rbgame::Font`
-  (`src/font.rs`, `lib/rbgame/font.rb`) loads a TrueType or OpenType file,
-  measures and renders text to Surfaces (blended, wrapped), and sets
-  style, outline and size; `Canvas#text(font:)` draws with one. The
-  tests render DejaVu Sans Mono, vendored under `test/fixtures` with its
-  license. Not wrapped: text objects and the renderer and GPU text engines
+  (`src/font.rs`, `lib/rbgame/font.rb`) loads a font file in any format
+  FreeType reads (TrueType, OpenType, Type 1, CID, Type 42, PFR, Windows
+  FNT, PCF, BDF), measures and renders text to Surfaces (blended,
+  wrapped; OpenType SVG glyphs in their own colours through the PlutoSVG
+  translation; shaping through OpenType or AAT tables), and sets style,
+  outline and size; `Canvas#text(font:)` draws with one. The tests render
+  DejaVu subsets (TrueType, Type 1 and SVG-glyph versions) vendored under
+  `test/fixtures` with their license. Not wrapped: text objects and the renderer and GPU text engines
   (glyph atlases); a render per string is enough for a game's HUD, and
   the engines can follow when a game needs thousands of glyphs a frame.
 * **SDL_rtf.** `sdl3-rtf` renders RTF documents through `sdl3-ttf`; not
