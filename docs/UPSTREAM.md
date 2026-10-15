@@ -30,21 +30,26 @@ the schedule), so a stale pin gets noticed.
 The translation's `README.md` and `docs/ROADMAP.md` list what is done. What
 has arrived so far, and what rbgame did about it:
 
-* **Platform video backends.** X11, Wayland (Linux) and Windows are
+* **Platform video backends.** X11, Wayland (Linux), Windows and Cocoa
+  (macOS, with OpenGL, Metal views and Vulkan through MoltenVK) are
   translated. `Rbgame.init` lets SDL pick a driver when a real one exists and
   falls back to `offscreen` only when none can start (`VideoDriver.choose`
-  and `Subsystems::Video`), so X11 and Wayland were picked up with no code
-  change; CI runs the suites on X11 under Xvfb. Still to come: Cocoa, the
-  mobile and console backends.
-* **GPU renderers.** OpenGL, OpenGL ES 2.0, Vulkan and Direct3D 11 and 12
-  (Windows) are translated and come before `software` in SDL's list, so a window on a
-  display now draws through the GPU (OpenGL on Mesa's llvmpipe under Xvfb in
-  CI, where the suites pass pixel for pixel as they did in software).
+  and `Subsystems::Video`), so X11, Wayland and Cocoa were picked up with
+  no code change; CI runs the suites on X11 under Xvfb and on the Cocoa
+  driver on the macOS runner (the job prints which driver and renderer SDL
+  picked). Still to come: the mobile and console backends.
+* **GPU renderers.** OpenGL, OpenGL ES 2.0, Vulkan, Direct3D 11 and 12
+  (Windows) and Metal (macOS, first in SDL's list there) are translated and
+  come before `software` in SDL's list, so a window on a display now draws
+  through the GPU (OpenGL on Mesa's llvmpipe under Xvfb in CI, Metal on the
+  macOS runner, where the suites pass pixel for pixel as they did in
+  software).
   `Display.set_mode(driver: ...)` still passes a renderer name through, and
   `Display.renderers` lists them; headless `offscreen` windows keep the
   software renderer unless Mesa's EGL is installed.
-* **Audio drivers.** ALSA, PulseAudio, PipeWire and WASAPI. `Mixer.default`
-  opens the default device; with none it is `Mixer::Silence`.
+* **Audio drivers.** ALSA, PulseAudio, PipeWire, WASAPI and CoreAudio.
+  `Mixer.default` opens the default device; with none it is
+  `Mixer::Silence`.
 * **SDL_mixer.** `sdl3-mixer` (pinned with the others) decodes WAV, AIFF,
   VOC, AU, MP3 (dr_mp3), Ogg Vorbis (stb_vorbis) and FLAC (dr_flac), and
   mixes tracks. rbgame uses it two ways: `Sound.load` decodes a whole file
@@ -73,14 +78,14 @@ has arrived so far, and what rbgame did about it:
   the default on a display and `Display.renderers` simply lists one more.
   `sdl3-test`, the SDL_test translation, is for the crate's own tests.
 * **Gamepads.** The HIDAPI gamepad drivers (Xbox, PlayStation, Nintendo,
-  Steam and many more), Linux evdev and Windows GameInput/RawInput/WGI feed
-  SDL's gamepad layer, which `Rbgame::Gamepad` wraps (`src/gamepad.rs`,
+  Steam and many more), Linux evdev, Windows GameInput/RawInput/WGI and
+  macOS IOKit and MFi (GameController) feed SDL's gamepad layer, which `Rbgame::Gamepad` wraps (`src/gamepad.rs`,
   `lib/rbgame/gamepad.rb`): named buttons and axes, `Event::Gamepad*`, and
   `Gamepad::Virtual` over SDL's virtual joystick so the tests drive a pad
   without hardware. Keyboard and mouse arrive through the same event queue
   rbgame already drains, so they work on a display as they did headless.
-* **Cameras.** The V4L2, PipeWire and Media Foundation drivers feed SDL's
-  camera layer, which `Rbgame::Camera` wraps (`src/camera.rs`,
+* **Cameras.** The V4L2, PipeWire, Media Foundation and CoreMedia
+  (AVFoundation) drivers feed SDL's camera layer, which `Rbgame::Camera` wraps (`src/camera.rs`,
   `lib/rbgame/camera.rb`): devices, formats, permission, frames as
   `Surface`s, and `Event::Camera*`. Tests run on SDL's dummy camera driver
   (`RBGAME_CAMERA_DRIVER=dummy`), which is what a machine without a webcam
@@ -110,10 +115,10 @@ has arrived so far, and what rbgame did about it:
   Ruby's own `socket` library already does this for a Ruby game, and a
   native copy of it would add nothing.
 * **Power, locale and sensors.** The power dispatcher got its Linux
-  (UPower, sysfs, `/proc/acpi`, `/proc/apm`) and Windows backends, so
-  `Rbgame::Power` (`lib/rbgame/power.rb`) reads the battery; the locale
-  list (`LANGUAGE`/`LANG` on Unix, the UI languages on Windows) is
-  `Rbgame::Locale`; the sensor layer got its Windows driver, which
+  (UPower, sysfs, `/proc/acpi`, `/proc/apm`), Windows and macOS (IOKit)
+  backends, so `Rbgame::Power` (`lib/rbgame/power.rb`) reads the battery;
+  the locale list (`LANGUAGE`/`LANG` on Unix, the UI languages on Windows,
+  `NSLocale` on macOS) is `Rbgame::Locale`; the sensor layer got its Windows driver, which
   `Rbgame::Sensor` (`src/sensor.rs`, `lib/rbgame/sensor.rb`) wraps, with
   `Sensor::None` on Linux where only the dummy driver exists. Gamepad
   sensors (the joystick layer's accelerometers and gyroscopes) are
@@ -133,7 +138,8 @@ has arrived so far, and what rbgame did about it:
   use; SDL's effect API (springs, ramps, custom waveforms) can follow on
   request. Dialogs, notifications, trays and message boxes: desktop
   integration (portals and zenity on Unix, `IFileDialog`, toasts and the
-  notification area on Windows), not game loop material; they can be
+  notification area on Windows, Cocoa panels, status items and
+  UserNotifications on macOS), not game loop material; they can be
   wrapped when wanted.
 
 The rule for an update that brings a new subsystem: wrap it. A capability
@@ -144,7 +150,8 @@ line and a row in the README's tour.
 
 Still worth watching:
 
-* **Metal and the GPU renderer** for macOS, once the Cocoa backend lands.
+* **The mobile backends** (UIKit, Android), should rbgame ever want to run
+  there; nothing in the Ruby layer assumes a desktop.
 
 ### Where rbgame touches the crate
 

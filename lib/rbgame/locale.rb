@@ -3,8 +3,8 @@
 module Rbgame
   # The languages the user prefers, most preferred first, as the platform
   # reports them (LANGUAGE, then LANG, read when SDL starts, on Unix; the UI
-  # languages on Windows; nothing yet on macOS, where the translation has
-  # no backend), for picking a game's strings.
+  # languages on Windows; the system's preferred languages on macOS), for
+  # picking a game's strings.
   #
   #   Locale.preferred          # => [Locale(language: "en", country: "US"), Locale("fr", nil)]
   #   Locale.first.language     # => "en"

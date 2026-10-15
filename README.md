@@ -97,20 +97,21 @@ return the canvas, so a frame is one chain ending in `present`.
 Early, and honest about it. The SDL translation now has its first platform
 backends, and rbgame uses them as they land:
 
-* **Windows on screen**: the X11 and Wayland drivers (Linux) and the Windows
-  driver are translated. On X11, rbgame opens a real window; the test suite
-  runs on it under Xvfb in CI, so what works headless is also checked on a
-  display. Wayland and Windows have not been tried by this project yet. macOS
-  is still to come upstream; on a machine without a usable driver rbgame
-  falls back to SDL's `offscreen` driver, draws into a framebuffer, and can
-  read it back (`screen.to_surface`, `screen.screenshot`), which is how the
-  rest of the tests and the Gorillas recorder run.
-* **Drawing**: SDL's OpenGL, OpenGL ES 2.0, Vulkan, Direct3D 11 and Direct3D
-  12 renderers are translated, and SDL picks the first that works on the window (OpenGL
-  on X11 with Mesa, which is what CI runs on). `Display.set_mode(driver:
+* **Windows on screen**: the X11 and Wayland drivers (Linux), the Windows
+  driver and the Cocoa driver (macOS) are translated. On X11 and on macOS,
+  rbgame opens a real window; the test suite runs on both in CI (X11 under
+  Xvfb, Cocoa on the macOS runner), so what works headless is also checked
+  on a display. Wayland and Windows have not been tried by this project
+  yet. On a machine without a usable driver rbgame falls back to SDL's
+  `offscreen` driver, draws into a framebuffer, and can read it back
+  (`screen.to_surface`, `screen.screenshot`), which is how the rest of the
+  tests and the Gorillas recorder run.
+* **Drawing**: SDL's Metal, OpenGL, OpenGL ES 2.0, Vulkan, Direct3D 11 and
+  Direct3D 12 renderers are translated, and SDL picks the first that works
+  on the window (OpenGL on X11 with Mesa, Metal on macOS; CI runs on both). `Display.set_mode(driver:
   "software")` asks for the software renderer instead; `Display.renderers`
   lists the choices.
-* **Sound**: ALSA, PulseAudio, PipeWire and WASAPI drivers are translated,
+* **Sound**: ALSA, PulseAudio, PipeWire, WASAPI and CoreAudio drivers are translated,
   and SDL_mixer too (`sdl3-mixer`): `Music` streams MP3, Ogg Vorbis, FLAC,
   WAV, AIFF, VOC and AU with loops, fades and volume, and `Sound.load`
   decodes the same formats into clips, which `Mixer` plays on SDL_mixer's
@@ -124,12 +125,13 @@ backends, and rbgame uses them as they land:
   BMP, GIF, TGA, ICO and CUR, and `Animation` loads animated GIF, APNG, ANI,
   WebP and AVIF sequences and saves GIF, APNG, ANI and WebP.
 * **Gamepads**: SDL's gamepad layer (HIDAPI drivers for Xbox, PlayStation,
-  Nintendo and Steam controllers, Linux evdev, Windows GameInput) behind
+  Nintendo and Steam controllers, Linux evdev, Windows GameInput, macOS
+  IOKit and MFi) behind
   `Gamepad`: one layout for every pad, sticks as Vectors, rumble, and
   events. `Gamepad::Virtual` is a pretend pad for tests, which is how the
   suite covers it without hardware.
-* **Cameras**: the V4L2 and PipeWire (Linux) and Media Foundation (Windows)
-  drivers behind `Camera`: `Camera.open` gives the first webcam, or a null
+* **Cameras**: the V4L2 and PipeWire (Linux), Media Foundation (Windows)
+  and CoreMedia (macOS) drivers behind `Camera`: `Camera.open` gives the first webcam, or a null
   object without one, and `frame` hands back each new picture as a
   `Surface`. The clipboard and touch events are wrapped too.
 * **Fonts**: SDL_ttf is translated with the FreeType and HarfBuzz it
@@ -141,13 +143,14 @@ backends, and rbgame uses them as they land:
   `screen.text(..., font: font)` draws with it. SDL's 8x8 debug font
   remains the default when no font is given.
 * **The machine itself**: `Power.status` reads the battery (UPower, sysfs
-  and the ACPI files on Linux, the system power status on Windows),
-  `Locale.preferred` the user's languages, and `Sensor.all` the platform's
-  own motion sensors (Windows' Sensor API; Linux reports none). Gamepads
+  and the ACPI files on Linux, the system power status on Windows, IOKit
+  on macOS), `Locale.preferred` the user's languages, and `Sensor.all` the
+  platform's own motion sensors (Windows' Sensor API; Linux and macOS
+  report none). Gamepads
   with motion sensors, a PlayStation or Switch pad say, report them
   through `Gamepad#gyroscope` and `#accelerometer` once enabled, and
   `Gamepad::Virtual#tilt` fakes them for tests.
-* **Still missing upstream**: the macOS backends.
+* **Still missing upstream**: the mobile and console backends.
 
 `docs/UPSTREAM.md` explains how rbgame follows that project.
 
