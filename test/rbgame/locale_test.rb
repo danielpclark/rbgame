@@ -6,13 +6,19 @@ require "open3"
 
 # SDL reads LANGUAGE (then LANG) on Unix once, when it starts, so each
 # preference list is read in a fresh Ruby with the variables set for it.
-# macOS has no locale backend in the translation yet (SDL asks Cocoa there),
-# so it always reports an empty list; the environment tests skip on it.
+# macOS asks the system for its preferred languages instead of the
+# environment, so the environment tests skip there.
 class LocaleTest < Minitest::Test
   Locale = Rbgame::Locale
 
   def skip_without_an_environment_backend
     skip "SDL's locale backend for this platform does not read LANGUAGE" unless RUBY_PLATFORM.include?("linux")
+  end
+
+  def test_the_platform_reports_a_list
+    first = in_fresh_ruby({}, "[Rbgame::Locale.preferred.size, Rbgame::Locale.preferred.all? { |l| l.language.is_a?(String) && !l.language.empty? }]")
+    assert_equal true, first.last, "every locale names a language"
+
   end
 
   def in_fresh_ruby(env, code)
@@ -40,8 +46,9 @@ class LocaleTest < Minitest::Test
   end
 
   def test_defaults_when_the_platform_does_not_say
+    skip_without_an_environment_backend
     first = in_fresh_ruby({}, "[Rbgame::Locale.preferred.size, Rbgame::Locale.first.tag]")
-    assert_equal [0, "en"], first, "no LANGUAGE or LANG set, or no backend, means no preference"
+    assert_equal [0, "en"], first, "no LANGUAGE or LANG set means no preference"
     assert_equal "en", Locale::DEFAULT.tag
     assert Locale::DEFAULT.match?("en-GB")
     refute Locale::DEFAULT.match?("fr")

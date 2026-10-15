@@ -52,6 +52,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `Mixer#channels`, `Mixer.offline(rate:, channels:)` with `render(seconds)`
   for mixing into a `Sound`. `Mixer.new(output:)` and `Mixer#queued` are
   gone; `Mixer::Silence` stands in for the whole mixer without a device.
+- SDL translation updated to `f58aa51c` (49 upstream commits): the macOS
+  port. The Cocoa video driver (OpenGL, Metal views, Vulkan through
+  MoltenVK), the Metal renderer and the GPU API's Metal backend, the
+  CoreAudio driver, the IOKit, MFi and HIDAPI controller drivers with
+  ForceFeedback haptics, the CoreMedia camera driver, and the macOS power,
+  locale, URL and filesystem backends, so rbgame opens a real window on a
+  Mac and CI runs the suites on it; also Cocoa file dialogs, tray and
+  notifications, which rbgame does not wrap.
 - SDL translation updated to `f261c1b6` (21 upstream commits): the Linux
   and Windows power backends, the Unix and Windows time, timer, locale,
   URL and filesystem backends, the Windows process, dialog, notification,
