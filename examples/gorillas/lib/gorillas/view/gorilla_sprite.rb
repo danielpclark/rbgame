@@ -2,42 +2,51 @@
 
 module Gorillas
   module View
-    # Draws a Gorilla as DrawGorilla did: boxes and circles, arms by pose.
+    # A Gorilla drawn as DrawGorilla drew it: boxes for the head and body,
+    # a line for the brow, dots for the nose, arcs for the legs, the chest
+    # and the arms, each arc five pixels thick. `x` and `y` are the
+    # original's: the head's centre line and the top of the head.
     class GorillaSprite
-      ARM_WIDTH = 4
+      # Where each arm's arc is centred, by pose: up is at y + 4, down at
+      # y + 14, as the original's three poses had them.
+      ARMS = { at_ease: [14, 14], left_up: [4, 14], right_up: [14, 4], both_up: [4, 4] }.freeze
 
       def initialize(gorilla)
         @gorilla = gorilla
       end
 
       def draw(canvas)
-        b = @gorilla.bounds
+        bounds = @gorilla.bounds
+        x = bounds.x + 15
+        y = bounds.y + 1
         body = Palette::GORILLA
-        detail = Palette::GORILLA_DETAIL
+        black = Palette::GORILLA_DETAIL
 
-        canvas.fill_rect([b.x + 7, b.y, 14, 8], body)                 # head
-        canvas.fill_rect([b.x + 8, b.y + 2, 3, 2], detail)            # eyes
-        canvas.fill_rect([b.x + 17, b.y + 2, 3, 2], detail)
-        canvas.line([b.x + 9, b.y + 6], [b.x + 19, b.y + 6], detail)  # mouth
-        canvas.fill_rect([b.x + 10, b.y + 8, 8, 2], body)             # neck
-        canvas.fill_rect([b.x + 4, b.y + 10, 20, 12], body)           # chest
-        canvas.line([b.x + 14, b.y + 12], [b.x + 14, b.y + 20], detail)
-        canvas.circle([b.x + 8, b.y + 24], 6, body)                   # legs
-        canvas.circle([b.x + 20, b.y + 24], 6, body)
-        canvas.fill_rect([b.x + 4, b.y + 24, 20, 6], body)
-        arm(canvas, :left, Rbgame::Vector.new(b.x + 4, b.y + 12), body)
-        arm(canvas, :right, Rbgame::Vector.new(b.x + 24, b.y + 12), body)
-      end
-
-      private
-
-      def arm(canvas, side, shoulder, color)
-        up = @gorilla.arm_up?(side)
-        outward = side == :left ? -1 : 1
-        elbow = shoulder + Rbgame::Vector.new(4 * outward, up ? -6 : 7)
-        hand = up ? elbow + Rbgame::Vector.new(0, -8) : elbow + Rbgame::Vector.new(2 * outward, 5)
-        canvas.line(shoulder, elbow, color, width: ARM_WIDTH)
-        canvas.line(elbow, hand, color, width: ARM_WIDTH)
+        # Head
+        Ega.box(canvas, x - 4, y, x + 2, y + 6, body)
+        Ega.box(canvas, x - 5, y + 2, x + 3, y + 4, body)
+        # Eyes and brow
+        Ega.line(canvas, x - 3, y + 2, x + 1, y + 2, black)
+        # Nose
+        [-2, -1].each do |i|
+          Ega.pset(canvas, x + i, y + 4, black)
+          Ega.pset(canvas, x + i + 3, y + 4, black)
+        end
+        # Neck
+        Ega.line(canvas, x - 3, y + 7, x + 2, y + 7, body)
+        # Body
+        Ega.box(canvas, x - 8, y + 8, x + 6, y + 14, body)
+        Ega.box(canvas, x - 6, y + 15, x + 4, y + 20, body)
+        # Legs
+        Ega.arc(canvas, [x, y + 25], 10, 135, 202.5, body, thickness: 5)
+        Ega.arc(canvas, [x - 6.1, y + 25], 10, 337.5, 45, body, thickness: 5)
+        # Chest
+        Ega.arc(canvas, [x - 5, y + 10], 4.9, 270, 360, black)
+        Ega.arc(canvas, [x + 4, y + 10], 4.9, 180, 270, black)
+        # Arms
+        left, right = ARMS.fetch(@gorilla.pose)
+        Ega.arc(canvas, [x - 5, y + left], 9, 135, 225, body, thickness: 5)
+        Ega.arc(canvas, [x - 0.1, y + right], 9, 315, 45, body, thickness: 5)
       end
     end
   end

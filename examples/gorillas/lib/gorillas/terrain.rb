@@ -22,9 +22,17 @@ module Gorillas
       pixels.byteslice((point.y * surface.pitch) + (point.x * 4), 4) != sky_bytes
     end
 
-    # Punches a crater; what was there is gone for good.
+    # Punches a crater; what was there is gone for good. The hole is a
+    # CIRCLE's ellipse, round on the stretched field.
     def crater(center, radius)
-      surface.fill_circle(center, radius, Palette::SKY)
+      center = Rbgame::Vector.coerce(center)
+      ry = radius * Field::ASPECT
+      (-ry.ceil..ry.ceil).each do |dy|
+        next if dy.abs > ry
+
+        half = radius * Math.sqrt(1 - ((dy / ry)**2))
+        surface.fill(Palette::SKY, [center.x - half, center.y + dy, (half * 2) + 1, 1])
+      end
       @version += 1
       self
     end

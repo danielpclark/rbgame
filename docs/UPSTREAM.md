@@ -5,7 +5,7 @@ rbgame stands on two projects that move quickly, both by the same author:
 | Dependency | What it is | Where it is pinned |
 |---|---|---|
 | [danielpclark/SDL](https://github.com/danielpclark/SDL) (`sdl3` crate) | SDL 3 translated to pure Rust, line by line | `Cargo.toml` (`rev = ...`) and `Cargo.lock` |
-| [danielpclark/rutie](https://github.com/danielpclark/rutie) | The tie between Ruby and Rust; no hand-written FFI | `Cargo.toml` (`rutie = "0.13"`), `rbgame.gemspec` (`rutie` gem) |
+| [danielpclark/rutie](https://github.com/danielpclark/rutie) | The tie between Ruby and Rust; no hand-written FFI | `Cargo.toml` (`rutie = "0.13.3"`, with its `derive` feature), `rbgame.gemspec` (`rutie` gem) |
 
 ## The SDL translation
 
@@ -162,5 +162,17 @@ says exactly where; the Ruby side (`lib/`) never sees SDL types.
 ## Rutie
 
 Rutie tracks Ruby's C API per Ruby line (see its README table): 0.13 for Ruby
-3.2–3.4, 0.14 for Ruby 4.0. `Cargo.toml` names the line; change it when you
-change Ruby. The `rutie` *gem* (the loader) is version-independent.
+3.2–3.4, 0.14 for Ruby 4.0, each line released from its own stable branch
+(`0.13-stable`, say). `Cargo.toml` names the line; change it when you change
+Ruby. The `rutie` *gem* (the loader) is version-independent.
+
+The native layer is written in Rutie's `derive` style (0.13.3 and later):
+each `Rbgame::Native` class is a Rust struct under `#[rubyclass]` with its
+methods in a `#[rubymethods]` block, and the module's functions sit in
+`#[rubymodule(path = "Rbgame::Native")]` blocks. Rutie converts the
+arguments and results, keeps each struct behind a borrow flag (a surface
+blitted onto itself is caught there), and raises a method's `Err` once its
+Rust values have been dropped; `src/support.rs` holds the lenient number
+arguments (`Num`, `Int`, `Chan`, ...) SDL coordinates want and the
+`NativeError` that becomes `Rbgame::SDLError`, `Rbgame::StateError` or an
+`ArgumentError`.

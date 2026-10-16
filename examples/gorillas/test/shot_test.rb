@@ -42,9 +42,11 @@ class ShotTest < Minitest::Test
 
   def test_wind_generation_is_within_the_originals_range
     rng = Random.new(1)
-    speeds = Array.new(200) { Wind.random(rng: rng).speed }
-    assert speeds.all? { |s| s.abs.between?(1, 20) }
+    speeds = Array.new(300) { Wind.random(rng: rng).speed }
+    assert speeds.all? { |s| s.between?(-15, 15) }
     assert speeds.any?(&:negative?)
     assert speeds.any?(&:positive?)
+    assert speeds.any?(&:zero?), "a calm day comes round"
+    assert speeds.any? { |s| s.abs > 5 }, "and so does a gust"
   end
 end

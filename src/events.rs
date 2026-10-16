@@ -1,12 +1,8 @@
 //! The event queue. Events cross into Ruby as plain Hashes with Symbol keys;
 //! `Rbgame::Event` turns them into immutable `Data` objects.
 
-use std::time::Duration;
-
-use rutie::{AnyObject, Boolean, Fixnum, Float, Hash, Module, NilClass, Object, RString, Symbol, Thread};
-use sdl3::events::{queue, Event, EventType};
-
-use crate::support::{i64_of, is_nil, arg, OrRaise};
+use rutie::{rubymodule, Array, Boolean, Fixnum, Float, Hash, NilClass, Object, RString, Symbol};
+use sdl3::events::{Event, EventType};
 
 fn put<V: Object>(hash: &mut Hash, key: &str, value: V) {
     hash.store(Symbol::new(key), value);
@@ -14,6 +10,22 @@ fn put<V: Object>(hash: &mut Hash, key: &str, value: V) {
 
 fn put_type(hash: &mut Hash, name: &str) {
     put(hash, "type", Symbol::new(name));
+}
+
+fn floats(values: impl IntoIterator<Item = f32>) -> Array {
+    let mut array = Array::new();
+    for value in values {
+        array.push(Float::new(value as f64));
+    }
+    array
+}
+
+fn strings(values: impl IntoIterator<Item = String>) -> Array {
+    let mut array = Array::new();
+    for value in values {
+        array.push(RString::new_utf8(&value));
+    }
+    array
 }
 
 fn window_event_name(event_type: EventType) -> &'static str {
@@ -154,13 +166,13 @@ pub fn event_to_hash(event: Event) -> Hash {
             put_type(&mut hash, "gamepad_sensor");
             put(&mut hash, "which", Fixnum::new(sensor.which as i64));
             put(&mut hash, "sensor", Fixnum::new(sensor.sensor as i64));
-            put(&mut hash, "values", crate::sensor::floats(sensor.data));
+            put(&mut hash, "values", floats(sensor.data));
             put(&mut hash, "sensor_timestamp_ns", Fixnum::new(sensor.sensor_timestamp as i64));
         }
         Event::Sensor(sensor) => {
             put_type(&mut hash, "sensor_update");
             put(&mut hash, "which", Fixnum::new(sensor.which as i64));
-            put(&mut hash, "values", crate::sensor::floats(sensor.data));
+            put(&mut hash, "values", floats(sensor.data));
             put(&mut hash, "sensor_timestamp_ns", Fixnum::new(sensor.sensor_timestamp as i64));
         }
         Event::CameraDevice(device) if camera_event_name(device.event_type).is_some() => {
@@ -180,7 +192,7 @@ pub fn event_to_hash(event: Event) -> Hash {
         Event::Clipboard(clipboard) => {
             put_type(&mut hash, "clipboard_update");
             put(&mut hash, "owner", Boolean::new(clipboard.owner));
-            put(&mut hash, "mime_types", crate::support::strings(clipboard.mime_types.clone()));
+            put(&mut hash, "mime_types", strings(clipboard.mime_types.clone()));
         }
         other => {
             put_type(&mut hash, "other");
@@ -192,83 +204,63 @@ pub fn event_to_hash(event: Event) -> Hash {
     hash
 }
 
-fn hash_or_nil(event: Option<Event>) -> AnyObject {
-    match event {
-        Some(event) => event_to_hash(event).to_any_object(),
-        None => NilClass::new().to_any_object(),
-    }
-}
+#[rubymodule(path = "Rbgame::Native")]
+mod functions {
+    use std::time::Duration;
 
-methods!(
-    AnyObject,
-    _rtself,
+    use rutie::{Hash, Thread};
+    use sdl3::events::{queue, Event, EventType};
 
-    fn ev_poll() -> AnyObject {
-        hash_or_nil(queue::poll())
+    use super::event_to_hash;
+    use crate::support::{Int, NativeResult, OptInt};
+
+    pub fn poll_event() -> Option<Hash> {
+        queue::poll().map(event_to_hash)
     }
 
     // Blocks without the GVL. `timeout_ms` nil waits forever.
-    fn ev_wait(timeout_ms: AnyObject) -> AnyObject {
-        let timeout = {
-            let object = arg(timeout_ms);
-            if is_nil(&object) {
-                None
-            } else {
-                Some(Duration::from_millis(i64_of(Ok(object), "timeout_ms").max(0) as u64))
-            }
-        };
-        let event = Thread::call_without_gvl(move || queue::wait_timeout(timeout), Some(|| {})).or_raise();
-        hash_or_nil(event)
+    pub fn wait_event(timeout_ms: OptInt) -> NativeResult<Option<Hash>> {
+        let timeout = timeout_ms.0.map(|ms| Duration::from_millis(ms.max(0) as u64));
+        let event = Thread::call_without_gvl(move || queue::wait_timeout(timeout), Some(|| {}))?;
+        Ok(event.map(event_to_hash))
     }
 
-    fn ev_pump() -> NilClass {
+    pub fn pump_events() {
         queue::pump();
-        NilClass::new()
     }
 
-    fn ev_push_quit() -> NilClass {
+    pub fn push_quit() {
         queue::send_quit();
-        NilClass::new()
     }
 
-    fn ev_push_user(code: AnyObject) -> Boolean {
-        let code = i64_of(code, "code") as i32;
+    pub fn push_user_event(code: Int) -> NativeResult<bool> {
         let event = Event::User(sdl3::events::UserEvent {
             event_type: EventType::USER,
             timestamp: Duration::ZERO,
             window_id: 0,
-            code,
+            code: code.0 as i32,
             data1: None,
             data2: None,
         });
-        Boolean::new(queue::push(event).or_raise())
+        Ok(queue::push(event)?)
     }
 
-    fn ev_flush() -> NilClass {
+    pub fn flush_events() {
         queue::flush_events(EventType::FIRST, EventType::LAST);
-        NilClass::new()
     }
 
     // SDL ends each poll cycle with a sentinel event; a wait that returns an
     // event leaves it queued, and the next poll then stops at it before
     // anything pushed since. Dropping it makes the next poll start a cycle.
-    fn ev_restart_poll_cycle() -> NilClass {
+    pub fn restart_poll_cycle() {
         queue::flush_event(EventType::POLL_SENTINEL);
-        NilClass::new()
     }
 
-    fn ev_queued_count() -> Fixnum {
-        Fixnum::new(queue::queued_event_count() as i64)
+    pub fn queued_event_count() -> i64 {
+        queue::queued_event_count() as i64
     }
-);
+}
 
-pub fn define(module: &mut Module) {
-    module.def_self("poll_event", ev_poll);
-    module.def_self("wait_event", ev_wait);
-    module.def_self("pump_events", ev_pump);
-    module.def_self("push_quit", ev_push_quit);
-    module.def_self("push_user_event", ev_push_user);
-    module.def_self("flush_events", ev_flush);
-    module.def_self("restart_poll_cycle", ev_restart_poll_cycle);
-    module.def_self("queued_event_count", ev_queued_count);
+pub fn define() {
+    functions::define_ruby();
 }

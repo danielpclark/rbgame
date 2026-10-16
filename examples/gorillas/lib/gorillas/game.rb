@@ -16,7 +16,7 @@ module Gorillas
   # lives in the scenes, the model and the views; this class only wires
   # them to rbgame and chooses who is at the controls.
   class Game < Rbgame::Game
-    configure title: "Ruby GORILLAS", fps: 60, logical: Field::SIZE
+    configure title: "Ruby GORILLAS", fps: 60
 
     attr_reader :options, :match, :rng, :controller, :jukebox, :autoplayer
 
@@ -28,10 +28,15 @@ module Gorillas
       @autoplayer = Autoplayer.new(rng: rng, accuracy: options.accuracy) if options.autoplay
       @controller = options.autoplay ? Controllers::Autopilot.new : Controllers::Keyboard.new
       @match = nil
-      self.class.configure size: Field::SIZE * options.scale
+      self.class.configure size: Field::WINDOW_SIZE * options.scale
     end
 
-    def setup = switch(Scenes::Intro.new(self))
+    # The 640x350 field fills the 4:3 window, stretched as an EGA monitor
+    # stretched it.
+    def setup
+      screen.set_logical_size(Field::SIZE, mode: :stretch)
+      switch(Scenes::Intro.new(self))
+    end
 
     def start_match(names:, play_to:, gravity:)
       @match = Match.new(names: names, play_to: play_to, gravity: gravity, rng: rng)

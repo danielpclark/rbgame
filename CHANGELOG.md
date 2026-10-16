@@ -46,6 +46,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- Gorillas looks like the original: the field is shown at 4:3 as an EGA
+  monitor showed it, the gorillas are DrawGorilla's (boxes, brow, nose,
+  arcs for legs, chest and arms, five pixels thick), the sun is DoSun's
+  (disc, eight rays, smile or O), the banana is a tapered crescent, and
+  the explosion and its crater are round on the stretched field. The city
+  is built as MakeCityScape built it: widths of 38 to 74, a slope (rising,
+  falling, valley three times in six, peak) whose trend every building
+  adds a fresh roll of up to 120 to, so no city is a flat row. The wind
+  is rolled the original way (-4 to 5 with a one-in-three gust of up to
+  10 more, so sometimes calm) and again for every throw; its arrow is six
+  pixels per unit, under the score.
+- The native layer is written in Rutie 0.13.3's `derive` style: every
+  `Rbgame::Native` class is a `#[rubyclass]` struct with `#[rubymethods]`,
+  the module's functions are `#[rubymodule]` blocks, and errors are returned
+  (and raised once the method's values are dropped) instead of thrown past
+  them. Same Ruby API; `lazy_static` is no longer a dependency.
 - `Mixer` plays on SDL_mixer's tracks: `play` starts a `Channel` of its own
   (`volume:`, `pan:`, `loops:`, `fade_in:`), so sounds overlap instead of
   queueing; `Channel#stop(fade_out:)`, `pause`, `resume`, `volume=`, `pan=`;

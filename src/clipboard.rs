@@ -1,46 +1,38 @@
 //! The system clipboard's text, through SDL. Without a platform clipboard
 //! (the offscreen driver, say) SDL keeps the text itself.
 
-use rutie::{AnyObject, Boolean, Module, NilClass, Object, RString};
-use sdl3::video::clipboard;
+use rutie::rubymodule;
 
-use crate::support::{str_of, OrRaise};
+#[rubymodule(path = "Rbgame::Native")]
+mod functions {
+    use sdl3::video::clipboard;
 
-methods!(
-    AnyObject,
-    _rtself,
+    use crate::support::NativeResult;
+    use crate::surface::Surface;
 
-    fn clip_text() -> RString {
-        RString::new_utf8(&clipboard::clipboard_text().or_raise())
+    pub fn clipboard_text() -> NativeResult<String> {
+        Ok(clipboard::clipboard_text()?)
     }
 
-    fn clip_set_text(text: RString) -> NilClass {
-        clipboard::set_clipboard_text(&str_of(text)).or_raise();
-        NilClass::new()
+    pub fn set_clipboard_text(text: &str) -> NativeResult<()> {
+        Ok(clipboard::set_clipboard_text(text)?)
     }
 
-    fn clip_has_text() -> Boolean {
-        Boolean::new(clipboard::has_clipboard_text().unwrap_or(false))
+    #[ruby(name = "clipboard_has_text?")]
+    pub fn clipboard_has_text() -> bool {
+        clipboard::has_clipboard_text().unwrap_or(false)
     }
 
-    fn clip_clear() -> NilClass {
-        clipboard::clear_clipboard_data().or_raise();
-        NilClass::new()
+    pub fn clear_clipboard() -> NativeResult<()> {
+        Ok(clipboard::clear_clipboard_data()?)
     }
 
     // An image on the clipboard as a Surface, or nil.
-    fn clip_image() -> AnyObject {
-        match sdl3_image::clipboard_image() {
-            Ok(surface) => crate::surface::wrap(surface),
-            Err(_) => NilClass::new().to_any_object(),
-        }
+    pub fn clipboard_image() -> Option<Surface> {
+        sdl3_image::clipboard_image().ok().map(Surface::from)
     }
-);
+}
 
-pub fn define(module: &mut Module) {
-    module.def_self("clipboard_text", clip_text);
-    module.def_self("set_clipboard_text", clip_set_text);
-    module.def_self("clipboard_has_text?", clip_has_text);
-    module.def_self("clear_clipboard", clip_clear);
-    module.def_self("clipboard_image", clip_image);
+pub fn define() {
+    functions::define_ruby();
 }

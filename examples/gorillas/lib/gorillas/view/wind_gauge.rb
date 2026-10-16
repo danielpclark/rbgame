@@ -2,9 +2,12 @@
 
 module Gorillas
   module View
-    # The arrow under the street: its length is the wind's strength.
+    # The arrow under the street, as MakeCityScape drew it: six pixels per
+    # unit of wind, with a two-pixel barb at the tip, along the bottom edge
+    # below the score.
     class WindGauge
-      PIXELS_PER_UNIT = 3
+      PIXELS_PER_UNIT = 6
+      BARB = 2
 
       def initialize(wind)
         @wind = wind
@@ -13,12 +16,13 @@ module Gorillas
       def draw(canvas)
         return if @wind.calm?
 
-        from = Rbgame::Vector.new(Field::WIDTH / 2, Field::STREET + 10)
-        to = from + [@wind.speed * PIXELS_PER_UNIT, 0]
-        barb = @wind.blowing_right? ? -2 : 2
-        canvas.line(from, to, Palette::WIND)
-        canvas.line(to, to + [barb, -2], Palette::WIND)
-        canvas.line(to, to + [barb, 2], Palette::WIND)
+        x = Field::WIDTH / 2
+        y = Field::HEIGHT - 3
+        tip = x + (@wind.speed * PIXELS_PER_UNIT)
+        barb = @wind.blowing_right? ? -BARB : BARB
+        Ega.line(canvas, x, y, tip, y, Palette::WIND)
+        Ega.line(canvas, tip, y, tip + barb, y - BARB, Palette::WIND)
+        Ega.line(canvas, tip, y, tip + barb, y + BARB, Palette::WIND)
       end
     end
   end

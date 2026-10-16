@@ -17,9 +17,10 @@ path = "src/lib.rs"
 [dependencies]
 # Rutie 0.13 is the Ruby 3.2–3.4 line. For Ruby 4.0 use `rutie = "0.14"`
 # (see README, "Ruby versions"). `no-link` leaves libruby to the `ruby`
-# process that loads the extension, which is the right thing for a cdylib.
-rutie = { version = "0.13", features = ["no-link"] }
-lazy_static = "1"
+# process that loads the extension, which is the right thing for a cdylib;
+# `derive` is the `#[rubyclass]`/`#[rubymethods]`/`#[rubymodule]` style the
+# native layer is written in.
+rutie = { version = "0.13.3", features = ["no-link", "derive"] }
 
 # Pure-Rust SDL 3 and SDL_image, two crates of one workspace. Pinned to a
 # commit so builds are reproducible; refresh both with `rake sdl:update`
