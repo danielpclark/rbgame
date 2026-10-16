@@ -24,6 +24,7 @@ class RoundTest < Minitest::Test
   end
 
   def test_a_miss_passes_the_turn
+    @round = @match.new_round(listener: ->(event) { @heard << event }, wind: Gorillas::Wind.calm)
     @round.throw(80, 10)
     assert @round.flying?
     assert_equal :right_up, @round.thrower_gorilla.pose
@@ -104,11 +105,14 @@ class RoundTest < Minitest::Test
       round.pass_turn
       winds << round.wind
     end
-    assert_operator winds.uniq.length, :>, 1
-    assert winds.all? { |wind| wind.speed.between?(-15, 15) }
+    winds.each_cons(2) { |before, after| refute_equal before, after, "every throw has a wind of its own" }
+    assert winds.all? { |wind| wind.speed.between?(-9.9, 9.9) }
   end
 
+  # The banana starts inside its thrower; a gale carries it clear on the
+  # way down, so only a hit on the way out could count against them.
   def test_the_thrower_never_hits_itself_on_the_way_out
+    @round = @match.new_round(wind: Gorillas::Wind.new(speed: 9.9))
     @round.throw(90, 30)
     run_until(@round) { |r| !r.flying? }
     refute @round.outcome.hit_gorilla?

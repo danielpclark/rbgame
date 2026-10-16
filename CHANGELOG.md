@@ -59,6 +59,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- Gorillas' wind is a strength from 0.0 to 9.9 in tenths, either way,
+  instead of GORILLA.BAS's -15..15. It pushes the banana sideways the
+  whole flight with an acceleration that grows with the square of the
+  strength (`Wind::PUSH`), so 1.0 barely nudges a throw and 9.9 carries
+  a banana thrown straight up 125 pixels across the city in eight seconds.
+  Every throw rolls a wind different from the last one's, and the
+  autoplayer searches every angle and velocity its aims can take.
+- Gorillas' wind arrow is a thin white line on the left player's name
+  line, just after the name and clear of the aim prompts below it,
+  instead of under the street, where a window too tall for the screen cut
+  it off: ten pixels per point of strength, its tip on the side the wind
+  blows towards, with the strength to one decimal place to its right
+  ("0.0" when calm, with no arrow).
 - Gorillas' gorillas are a pixel-art bitmap instead of DrawGorilla's boxes
   and arcs: brown fur, a tan face and ears (`Palette::GORILLA_FACE`), a
   black brow, eyes, nostrils and chest, fists on the hips or raised. Only

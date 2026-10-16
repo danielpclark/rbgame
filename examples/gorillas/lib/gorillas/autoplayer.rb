@@ -5,8 +5,8 @@ module Gorillas
   # same Shot physics the game uses, picks one that lands on the opponent,
   # then adds a human amount of error so rounds have some drama.
   class Autoplayer
-    ANGLES = (15..80).step(5).to_a.freeze
-    VELOCITIES = (25..100).step(5).to_a.freeze
+    ANGLES = (5..85).step(5).to_a.freeze
+    VELOCITIES = (10..150).step(5).to_a.freeze
 
     # An angle and a velocity, ready to be typed into the prompts.
     class Aim < Data.define(:angle, :velocity)

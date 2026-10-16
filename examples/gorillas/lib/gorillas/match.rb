@@ -37,6 +37,6 @@ module Gorillas
     # The loser of the last round throws first; player 1 opens the match.
     def opening_player = rounds.zero? ? left : opponent_of(leader)
 
-    def new_round(listener: Round::NO_LISTENER) = Round.new(self, listener: listener)
+    def new_round(listener: Round::NO_LISTENER, wind: nil) = Round.new(self, listener: listener, wind: wind)
   end
 end

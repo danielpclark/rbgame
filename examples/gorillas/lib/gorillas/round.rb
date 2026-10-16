@@ -17,13 +17,16 @@ module Gorillas
 
     attr_reader :match, :skyline, :terrain, :wind, :sun, :thrower, :phase, :outcome, :listener
 
-    def initialize(match, rng: match.rng, listener: NO_LISTENER)
+    # `wind` sets the first throw's wind instead of the one rolled for it
+    # (still rolled, so the rest of the round is the same city either way).
+    def initialize(match, rng: match.rng, listener: NO_LISTENER, wind: nil)
       @match = match
       @rng = rng
       @listener = listener
       @skyline = Skyline.generate(rng: rng)
       @terrain = Terrain.new(skyline)
       @wind = Wind.random(rng: rng)
+      @wind = wind if wind
       @sun = Sun.new
       @gorillas = place_gorillas(rng)
       @thrower = match.opening_player
@@ -98,11 +101,11 @@ module Gorillas
     end
 
     # The other player's turn, in a wind of its own: the original rolled
-    # the wind once per city, this rolls it for every throw.
+    # the wind once per city, this rolls a different one for every throw.
     def pass_turn
       strike(thrower, :at_ease)
       @thrower = match.opponent_of(thrower)
-      @wind = Wind.random(rng: @rng)
+      @wind = Wind.random(rng: @rng, unlike: wind)
     end
 
     # The player (if any) whose gorilla is at `point`. A thrower is safe

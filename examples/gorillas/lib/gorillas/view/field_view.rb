@@ -16,7 +16,7 @@ module Gorillas
         @round.gorillas.each { |gorilla| GorillaSprite.new(gorilla).draw(canvas) }
         BananaSprite.new(@round.banana).draw(canvas) if @round.banana
         ExplosionSprite.new(@round.explosion).draw(canvas) if @round.explosion
-        WindGauge.new(@round.wind).draw(canvas)
+        WindGauge.new(@round.wind, after: @round.match.left.name).draw(canvas)
       end
 
       def dispose = @city.dispose

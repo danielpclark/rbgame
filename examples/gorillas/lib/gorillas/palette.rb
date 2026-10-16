@@ -18,7 +18,7 @@ module Gorillas
     EXPLOSION_CORE = EGA[14]
     TEXT = EGA[15]
     TEXT_DIM = EGA[7]
-    WIND = EGA[12]
+    WIND = EGA[15]
     FACE = EGA[0]
   end
 end
