@@ -12,7 +12,7 @@ module Gorillas
         text = Typography.new(canvas)
         text.line(@match.left.name, at: [4, 4])
         text.line(@match.right.name, at: [Field::WIDTH - 4, 4], align: :right)
-        text.line("#{@match.left.score}>Score<#{@match.right.score}", at: [Field::WIDTH / 2, Field::STREET + 4], align: :center)
+        text.line("#{@match.left.score}>Score<#{@match.right.score}", at: [Field::WIDTH / 2, Field::STREET + 1], align: :center)
       end
     end
   end

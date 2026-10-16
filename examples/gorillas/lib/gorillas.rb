@@ -17,6 +17,6 @@ end
   player match round round/phase autoplayer prompt questionnaire typist
   controllers/keyboard controllers/autopilot jukebox
   view/typography view/gorilla_sprite view/sun_sprite view/banana_sprite view/explosion_sprite
-  view/wind_gauge view/city_view view/field_view view/scoreboard
+  view/ega view/wind_gauge view/city_view view/field_view view/scoreboard
   scenes/base scenes/intro scenes/setup scenes/play scenes/game_over game
 ].each { |file| require_relative "gorillas/#{file}" }

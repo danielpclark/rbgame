@@ -19,6 +19,7 @@ module Gorillas
 
     def initialize(match, rng: match.rng, listener: NO_LISTENER)
       @match = match
+      @rng = rng
       @listener = listener
       @skyline = Skyline.generate(rng: rng)
       @terrain = Terrain.new(skyline)
@@ -96,9 +97,12 @@ module Gorillas
       announce(:victory)
     end
 
+    # The other player's turn, in a wind of its own: the original rolled
+    # the wind once per city, this rolls it for every throw.
     def pass_turn
       strike(thrower, :at_ease)
       @thrower = match.opponent_of(thrower)
+      @wind = Wind.random(rng: @rng)
     end
 
     # The player (if any) whose gorilla is at `point`. A thrower is safe

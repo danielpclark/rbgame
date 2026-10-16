@@ -4,8 +4,9 @@ module Gorillas
   # A gorilla standing on a roof: where its feet are, which way it faces,
   # and which arms are up. Poses are new gorillas, not mutations.
   class Gorilla < Data.define(:feet, :facing, :pose)
-    WIDTH = 28
-    HEIGHT = 30
+    # The box DrawGorilla's sprite was captured from.
+    WIDTH = 30
+    HEIGHT = 31
     POSES = %i[at_ease left_up right_up both_up].freeze
 
     def initialize(feet:, facing: :right, pose: :at_ease)

@@ -11,8 +11,9 @@ class SkylineTest < Minitest::Test
     assert_operator skyline.length, :>=, 5
     skyline.each_cons(2) { |a, b| assert_operator b.x, :>=, a.right }
     assert_operator skyline.buildings.last.right, :<=, Field::WIDTH
-    skyline.each do |building|
+    skyline.each_with_index do |building, i|
       assert_includes Skyline::MIN_HEIGHT..Skyline::MAX_HEIGHT, building.height
+      assert_includes Skyline::MIN_WIDTH..Skyline::MAX_WIDTH, building.width if i < skyline.length - 1
       assert_includes Gorillas::Palette::BUILDINGS, building.color
       assert_equal Field::STREET, building.rect.bottom
     end
@@ -34,10 +35,22 @@ class SkylineTest < Minitest::Test
   end
 
   def test_slopes_shape_the_city
-    rising = Array.new(50) { |i| Skyline.generate(rng: Random.new(i)) }.find { |s| s.slope == :rising }
+    cities = Array.new(60) { |i| Skyline.generate(rng: Random.new(i)) }
+    rising = cities.find { |s| s.slope == :rising }
     refute_nil rising
     first, last = rising.buildings.first.height, rising.buildings.last.height
-    assert_operator last, :>=, first - Skyline::HEIGHT_STEP * 6
+    assert_operator last, :>=, first - Skyline::RANDOM_HEIGHT + (Skyline::HEIGHT_STEP * (rising.length - 1))
+    assert_equal %i[rising falling valley peak], cities.map(&:slope).uniq.sort_by { |s| Skyline::Slope::ALL.map(&:name).index(s) }
+    assert_operator cities.count { |s| s.slope == :valley }, :>, cities.count { |s| s.slope == :peak }, "the valley is the common one"
+  end
+
+  def test_heights_vary_building_to_building
+    # Every height is the slope's trend plus a fresh roll, so no city is a
+    # flat row even where the trend has run out.
+    Array.new(30) { |i| Skyline.generate(rng: Random.new(i)) }.each do |city|
+      heights = city.buildings.map(&:height)
+      assert_operator heights.uniq.length, :>=, heights.length / 2, city.slope.to_s
+    end
   end
 
   def test_building_under

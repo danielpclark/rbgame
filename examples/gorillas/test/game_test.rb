@@ -14,6 +14,7 @@ class GameTest < Minitest::Test
       game.run(frames: 240, screenshots: dir, every: 30)
       frames = Dir.children(dir).sort.map { |name| Rbgame::Surface.load(File.join(dir, name)) }
       assert_equal 8, frames.length
+      assert_equal Rbgame::Vector[640, 480], frames.first.size, "the field is shown at 4:3, as on an EGA monitor"
 
       # Scenes change on the clock, not the frame count, so only the first
       # frame is certain: the title card, with its sun and gorillas.
@@ -32,6 +33,6 @@ class GameTest < Minitest::Test
 
   # The colours on a coarse grid over the frame.
   def colors_in(frame)
-    (0...640).step(8).flat_map { |x| (0...350).step(7).map { |y| frame[x, y] } }.uniq
+    (0...frame.width).step(8).flat_map { |x| (0...frame.height).step(7).map { |y| frame[x, y] } }.uniq
   end
 end

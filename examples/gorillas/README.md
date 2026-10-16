@@ -6,6 +6,12 @@ under gravity and wind, blows craters in buildings, startles the sun, and
 scores when it lands on the other gorilla. The tunes are the original PLAY
 strings, rendered by `Rbgame::Synth` as PC-speaker square waves.
 
+It looks the way the original did on an EGA monitor: the 640x350 field is
+shown stretched to 4:3, the gorillas, sun and city are drawn with the same
+boxes, lines and arcs as DrawGorilla, DoSun and MakeCityScape (squashed the
+way QBasic's CIRCLE squashed them, so they come out round), and the wind
+is rolled afresh for every throw.
+
 ```sh
 bin/gorillas                                  # play (Esc or Q quits)
 bin/gorillas --autoplay                       # watch Ruby play Rust
@@ -27,7 +33,7 @@ Three layers, and the model never sees a pixel or a key:
 | `Match`, `Player` | names, scores, gravity, who throws first |
 | `Round` | one city, two gorillas, turns; its behaviour lives in phase objects |
 | `Round::Phase` | `Aiming`, `Flying`, `Exploding`, `Dancing`, `Over`: each handles time and throws and hands over to the next |
-| `Skyline`, `Building` | the city, built by an `Architect` walking the field under a `Slope` (rising, falling, valley, peak, random) |
+| `Skyline`, `Building` | the city, built by an `Architect` walking the field under a `Slope` (rising, falling, valley, peak), as MakeCityScape built it |
 | `Terrain` | the city as pixels, for POINT-style collisions and craters |
 | `Shot`, `Flight`, `Banana` | the trajectory equations, a banana in the air, the banana at an instant |
 | `Wind`, `Sun`, `Gorilla`, `Explosion`, `Outcome` | immutable values of the field |

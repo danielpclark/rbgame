@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 module Gorillas
-  # Wind in GORILLA.BAS units: -10..10, positive blowing to the right, with
-  # a one-in-three chance of a gust that doubles it.
+  # Wind in GORILLA.BAS units, rolled as MakeCityScape rolled it: -4..5,
+  # positive blowing to the right, with a one-in-three chance of a gust of
+  # up to ten more in the direction it already blows (so up to 15 either
+  # way, and sometimes calm).
   class Wind < Data.define(:speed)
     def self.random(rng: Random.new)
-      speed = rng.rand(1..10)
-      speed = -speed if rng.rand < 0.5
-      speed *= 2 if rng.rand < 0.33
+      speed = rng.rand(1..10) - 5
+      speed += speed.positive? ? rng.rand(1..10) : -rng.rand(1..10) if rng.rand(1..3) == 1
       new(speed: speed)
     end
 

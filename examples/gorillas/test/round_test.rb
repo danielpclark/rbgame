@@ -97,6 +97,17 @@ class RoundTest < Minitest::Test
     assert_raises(Rbgame::StateError) { @round.throw(45, 50) }
   end
 
+  def test_the_wind_changes_with_each_turn
+    round = GorillasTest.match(seed: 7).new_round
+    winds = [round.wind]
+    6.times do
+      round.pass_turn
+      winds << round.wind
+    end
+    assert_operator winds.uniq.length, :>, 1
+    assert winds.all? { |wind| wind.speed.between?(-15, 15) }
+  end
+
   def test_the_thrower_never_hits_itself_on_the_way_out
     @round.throw(90, 30)
     run_until(@round) { |r| !r.flying? }
