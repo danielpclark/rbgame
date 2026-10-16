@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- Gorillas' gorillas are a pixel-art bitmap instead of DrawGorilla's boxes
+  and arcs: brown fur, a tan face and ears (`Palette::GORILLA_FACE`), a
+  black brow, eyes, nostrils and chest, fists on the hips or raised. Only
+  the left half is drawn, mirrored, with its arm down or up for each pose.
 - Gorillas looks like the original: the field is shown at 4:3 as an EGA
   monitor showed it, the gorillas are DrawGorilla's (boxes, brow, nose,
   arcs for legs, chest and arms, five pixels thick), the sun is DoSun's
