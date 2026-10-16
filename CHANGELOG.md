@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   instead of GORILLA.BAS's -15..15. It pushes the banana sideways the
   whole flight with an acceleration that grows with the square of the
   strength (`Wind::PUSH`), so 1.0 barely nudges a throw and 9.9 carries
-  a banana thrown straight up 125 pixels across the city in eight seconds.
+  a banana thrown straight up 163 pixels across the city in eight seconds.
   Every throw rolls a wind different from the last one's, and the
   autoplayer searches every angle and velocity its aims can take.
 - Gorillas' wind arrow is a thin white line on the left player's name

@@ -6,12 +6,12 @@ module Gorillas
   # sideways the whole time it is in the air, a steady acceleration that
   # grows with the square of the strength, so a 1.0 barely nudges a throw
   # and a 9.9 sweeps it across the city: a banana thrown straight up
-  # drifts about 1.3 pixels in eight seconds at 1.0, 32 at 5.0 and 125
-  # at 9.9, its sideways speed building by 0.04 * strength² pixels a
+  # drifts about 1.7 pixels in eight seconds at 1.0, 42 at 5.0 and 163
+  # at 9.9, its sideways speed building by 0.052 * strength² pixels a
   # second every second.
   class Wind < Data.define(:speed)
     MAX = 9.9
-    PUSH = 0.04 # acceleration per unit of strength squared
+    PUSH = 0.052 # acceleration per unit of strength squared
 
     def initialize(speed:)
       speed = Float(speed).round(1)
