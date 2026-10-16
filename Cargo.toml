@@ -25,14 +25,14 @@ rutie = { version = "0.13.3", features = ["no-link", "derive"] }
 # Pure-Rust SDL 3 and SDL_image, two crates of one workspace. Pinned to a
 # commit so builds are reproducible; refresh both with `rake sdl:update`
 # (see docs/UPSTREAM.md) when upstream moves.
-sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "f58aa51cf252" }
-sdl3-image = { git = "https://github.com/danielpclark/SDL", rev = "f58aa51cf252" }
+sdl3 = { git = "https://github.com/danielpclark/SDL", rev = "6e5a24507787378ff7e2eea1be43b54a0f5d28cc" }
+sdl3-image = { git = "https://github.com/danielpclark/SDL", rev = "6e5a24507787378ff7e2eea1be43b54a0f5d28cc" }
 # SDL_mixer without its bundled TiMidity, which is not zlib-licensed
 # (Artistic-1.0-Perl OR LGPL-2.1); `--features midi` adds it.
-sdl3-mixer = { git = "https://github.com/danielpclark/SDL", rev = "f58aa51cf252", default-features = false }
+sdl3-mixer = { git = "https://github.com/danielpclark/SDL", rev = "6e5a24507787378ff7e2eea1be43b54a0f5d28cc", default-features = false }
 # SDL_ttf with the FreeType and HarfBuzz it bundles (zlib, FTL, MIT and
 # Unicode licensed; see README, "License").
-sdl3-ttf = { git = "https://github.com/danielpclark/SDL", rev = "f58aa51cf252" }
+sdl3-ttf = { git = "https://github.com/danielpclark/SDL", rev = "6e5a24507787378ff7e2eea1be43b54a0f5d28cc" }
 
 [features]
 # MIDI playback through TiMidity (needs GUS patches or a SoundFont at run
