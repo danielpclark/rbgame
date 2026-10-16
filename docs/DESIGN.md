@@ -70,9 +70,9 @@ them well-formed in CI. The native layer is typed by Rust.
 
 ## Resources are objects with a clear owner
 
-Windows, renderers, surfaces, textures and audio streams are Rust values
-wrapped in Ruby objects (`wrappable_struct!`). Ruby's GC frees them; `destroy`
-frees them early. A `Texture` belongs to the `Canvas` that made it. Handles
+Windows, renderers, surfaces, textures and audio streams are Rust structs
+living inside Ruby objects (Rutie's `#[rubyclass]`). Ruby's GC frees them;
+`destroy` frees them early. A `Texture` belongs to the `Canvas` that made it. Handles
 are checked by SDL on every use, so a stale one raises instead of crashing.
 
 ## Errors are exceptions, and they have a family

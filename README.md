@@ -10,8 +10,9 @@ unusual:
   [danielpclark/SDL](https://github.com/danielpclark/SDL), a line-by-line
   translation of SDL 3 into pure Rust. No C is compiled, vendored or linked.
 * **No FFI is written by hand.** Ruby reaches that Rust through
-  [Rutie](https://github.com/danielpclark/rutie), so the native layer is a few
-  hundred lines of Rust methods, not a binding generator's output.
+  [Rutie](https://github.com/danielpclark/rutie): the native layer is plain
+  Rust structs and methods under its `#[rubyclass]`, `#[rubymethods]` and
+  `#[rubymodule]` attributes, not a binding generator's output.
 
 And one thing makes it Ruby: the API is designed as a Ruby library, not a
 transliteration of pygame. Value objects are immutable `Data` classes that
@@ -169,8 +170,8 @@ bundle exec rake          # the tests, headless
 bundle exec rake gorillas:play
 ```
 
-Ruby 4.0 users: change `rutie = "0.13"` to `"0.14"` in `Cargo.toml` (Rutie
-tracks one Ruby line per release).
+Ruby 4.0 users: change `rutie = "0.13.3"` to `"0.14.3"` in `Cargo.toml`
+(Rutie tracks one Ruby line per release).
 
 ## The demo: Gorillas
 

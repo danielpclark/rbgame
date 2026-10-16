@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- The native layer is written in Rutie 0.13.3's `derive` style: every
+  `Rbgame::Native` class is a `#[rubyclass]` struct with `#[rubymethods]`,
+  the module's functions are `#[rubymodule]` blocks, and errors are returned
+  (and raised once the method's values are dropped) instead of thrown past
+  them. Same Ruby API; `lazy_static` is no longer a dependency.
 - `Mixer` plays on SDL_mixer's tracks: `play` starts a `Channel` of its own
   (`volume:`, `pan:`, `loops:`, `fade_in:`), so sounds overlap instead of
   queueing; `Channel#stop(fade_out:)`, `pause`, `resume`, `volume=`, `pan=`;

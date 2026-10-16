@@ -1,278 +1,219 @@
 //! `Rbgame::Native::Gamepad`: a game controller through SDL's gamepad API,
-//! which maps every supported device onto one layout. Buttons and axes cross
-//! as SDL's indexes; `Rbgame::Gamepad` names them.
+//! which maps every supported device onto one layout. Buttons, axes and
+//! sensors cross as SDL's indexes; `Rbgame::Gamepad` names them.
 //!
 //! `Rbgame::Native::VirtualGamepad` is a pretend controller SDL treats as a
 //! real one, so tests and demos can press its buttons and tilt its sensors.
 
-use rutie::{AnyObject, Array, Boolean, Fixnum, Float, NilClass, Object, RString};
-use sdl3::gamepad::{Gamepad, GamepadAxis, GamepadButton};
+use rutie::{rubyclass, rubymethods};
 use sdl3::events::JoystickID;
+use sdl3::gamepad::{Gamepad as SdlGamepad, GamepadAxis, GamepadButton};
 use sdl3::joystick::{attach_virtual_joystick, detach_virtual_joystick, Joystick, JoystickType, VirtualJoystickDesc, VirtualJoystickSensorDesc};
 use sdl3::sensor::SensorType;
 
-use crate::sensor::{floats, sensor_type_of};
-use crate::support::{f32s_of, i32_of, i64_of, ints_array, native, opt_string, raise_arg, raise_state, str_of, truthy, u8_of, OrRaise};
+use crate::sensor::sensor_type_of;
+use crate::support::{arg_error, state_error, Chan, Int, NativeResult, Num, Truthy};
 
-pub struct GamepadBox {
-    gamepad: Option<Gamepad>,
+/// Instances come only from `Gamepad.open`.
+#[rubyclass(path = "Rbgame::Native::Gamepad", allocator = false)]
+pub struct Gamepad {
+    gamepad: Option<SdlGamepad>,
 }
 
-wrappable_struct!(GamepadBox, GamepadWrapper, GAMEPAD_WRAPPER);
-native_class!(RbGamepad, "Gamepad");
-
-pub struct VirtualBox {
+/// Instances come only from `VirtualGamepad.attach`.
+#[rubyclass(path = "Rbgame::Native::VirtualGamepad", allocator = false)]
+pub struct VirtualGamepad {
     id: JoystickID,
     joystick: Option<Joystick>,
 }
-
-wrappable_struct!(VirtualBox, VirtualWrapper, VIRTUAL_WRAPPER);
-native_class!(RbVirtualGamepad, "VirtualGamepad");
 
 /// The standard buttons a virtual pad has: south through dpad_right.
 const VIRTUAL_BUTTONS: u16 = 15;
 const VIRTUAL_AXES: u16 = 6;
 
-impl RbGamepad {
-    fn gamepad(&mut self) -> &Gamepad {
-        match &self.get_data_mut(&*GAMEPAD_WRAPPER).gamepad {
-            Some(gamepad) => gamepad,
-            None => raise_state("gamepad is closed"),
+impl Gamepad {
+    fn get(&self) -> NativeResult<&SdlGamepad> {
+        match &self.gamepad {
+            Some(gamepad) => Ok(gamepad),
+            None => state_error("gamepad is closed"),
         }
     }
 }
 
-impl RbVirtualGamepad {
-    fn joystick(&mut self) -> &Joystick {
-        match &self.get_data_mut(&*VIRTUAL_WRAPPER).joystick {
-            Some(joystick) => joystick,
-            None => raise_state("virtual gamepad is detached"),
+impl VirtualGamepad {
+    fn get(&self) -> NativeResult<&Joystick> {
+        match &self.joystick {
+            Some(joystick) => Ok(joystick),
+            None => state_error("virtual gamepad is detached"),
         }
     }
 }
 
-fn button_of(index: i32) -> GamepadButton {
-    match GamepadButton::from_i32(index) {
-        GamepadButton::Invalid => raise_arg("no such gamepad button"),
-        button => button,
+fn button_of(index: Int) -> NativeResult<GamepadButton> {
+    match GamepadButton::from_i32(index.0 as i32) {
+        GamepadButton::Invalid => arg_error("no such gamepad button"),
+        button => Ok(button),
     }
 }
 
-fn axis_of(index: i32) -> GamepadAxis {
-    match usize::try_from(index).ok().and_then(|i| GamepadAxis::all().nth(i)) {
-        Some(axis) => axis,
-        None => raise_arg("no such gamepad axis"),
+fn axis_of(index: Int) -> NativeResult<GamepadAxis> {
+    match usize::try_from(index.0).ok().and_then(|i| GamepadAxis::all().nth(i)) {
+        Some(axis) => Ok(axis),
+        None => arg_error("no such gamepad axis"),
     }
 }
 
-fn id_of(value: AnyObject) -> JoystickID {
-    i64_of(Ok(value), "id") as JoystickID
+#[rubymethods]
+impl Gamepad {
+    pub fn ids() -> Vec<i64> {
+        sdl3::gamepad::gamepads().into_iter().map(|id| id as i64).collect()
+    }
+
+    pub fn open(id: Int) -> NativeResult<Gamepad> {
+        Ok(Gamepad { gamepad: Some(SdlGamepad::open(id.0 as JoystickID)?) })
+    }
+
+    pub fn id(&self) -> NativeResult<i64> {
+        Ok(self.get()?.id() as i64)
+    }
+
+    pub fn name(&self) -> NativeResult<Option<String>> {
+        Ok(self.get()?.name()?)
+    }
+
+    pub fn type_name(&self) -> NativeResult<Option<String>> {
+        Ok(self.get()?.gamepad_type().as_str().map(str::to_owned))
+    }
+
+    pub fn player_index(&self) -> NativeResult<i64> {
+        Ok(self.get()?.player_index() as i64)
+    }
+
+    #[ruby(name = "connected?")]
+    pub fn connected(&self) -> NativeResult<bool> {
+        Ok(self.get()?.connected())
+    }
+
+    #[ruby(name = "button?")]
+    pub fn button(&self, index: Int) -> NativeResult<bool> {
+        Ok(self.get()?.button(button_of(index)?))
+    }
+
+    #[ruby(name = "has_button?")]
+    pub fn has_button(&self, index: Int) -> NativeResult<bool> {
+        Ok(self.get()?.has_button(button_of(index)?))
+    }
+
+    pub fn axis(&self, index: Int) -> NativeResult<i64> {
+        Ok(self.get()?.axis(axis_of(index)?) as i64)
+    }
+
+    #[ruby(name = "has_axis?")]
+    pub fn has_axis(&self, index: Int) -> NativeResult<bool> {
+        Ok(self.get()?.has_axis(axis_of(index)?))
+    }
+
+    // Strengths 0..0xFFFF; false when this pad cannot rumble.
+    pub fn rumble(&self, low: Int, high: Int, ms: Int) -> NativeResult<bool> {
+        Ok(self.get()?.rumble(low.0 as u16, high.0 as u16, ms.0 as u32).is_ok())
+    }
+
+    pub fn rumble_triggers(&self, left: Int, right: Int, ms: Int) -> NativeResult<bool> {
+        Ok(self.get()?.rumble_triggers(left.0 as u16, right.0 as u16, ms.0 as u32).is_ok())
+    }
+
+    pub fn set_led(&self, r: Chan, g: Chan, b: Chan) -> NativeResult<bool> {
+        Ok(self.get()?.set_led(r.0, g.0, b.0).is_ok())
+    }
+
+    // Sensor types are SDL's numbers; see `Rbgame::Sensor::TYPES`.
+    #[ruby(name = "has_sensor?")]
+    pub fn has_sensor(&self, index: Int) -> NativeResult<bool> {
+        Ok(self.get()?.has_sensor(sensor_type_of(index)?))
+    }
+
+    pub fn set_sensor_enabled(&self, index: Int, enabled: Truthy) -> NativeResult<()> {
+        Ok(self.get()?.set_sensor_enabled(sensor_type_of(index)?, enabled.0)?)
+    }
+
+    #[ruby(name = "sensor_enabled?")]
+    pub fn sensor_enabled(&self, index: Int) -> NativeResult<bool> {
+        Ok(self.get()?.sensor_enabled(sensor_type_of(index)?))
+    }
+
+    // Readings per second, 0.0 when unknown.
+    pub fn sensor_rate(&self, index: Int) -> NativeResult<f64> {
+        Ok(self.get()?.sensor_data_rate(sensor_type_of(index)?) as f64)
+    }
+
+    // The latest [x, y, z] of a sensor: m/s^2 for accelerometers, rad/s for gyroscopes.
+    pub fn sensor_data(&self, index: Int) -> NativeResult<Vec<f32>> {
+        let mut data = [0.0f32; 3];
+        self.get()?.sensor_data(sensor_type_of(index)?, &mut data)?;
+        Ok(data.to_vec())
+    }
+
+    pub fn close(&mut self) {
+        self.gamepad = None;
+    }
 }
 
-methods!(
-    AnyObject,
-    _rtself,
-
-    fn pad_ids() -> Array {
-        ints_array(sdl3::gamepad::gamepads().into_iter().map(|id| id as i64))
-    }
-
-    fn pad_open(id: AnyObject) -> AnyObject {
-        let gamepad = Gamepad::open(id_of(id.unwrap())).or_raise();
-        native()
-            .get_nested_class("Gamepad")
-            .wrap_data(GamepadBox { gamepad: Some(gamepad) }, &*GAMEPAD_WRAPPER)
-    }
-
-    fn vpad_attach(name: RString) -> AnyObject {
+#[rubymethods]
+impl VirtualGamepad {
+    pub fn attach(name: &str) -> NativeResult<VirtualGamepad> {
         let sensor = |sensor_type| VirtualJoystickSensorDesc { sensor_type, rate: 0.0 };
         let desc = VirtualJoystickDesc {
             joystick_type: JoystickType::Gamepad,
             naxes: VIRTUAL_AXES,
             nbuttons: VIRTUAL_BUTTONS,
             sensors: vec![sensor(SensorType::Accel), sensor(SensorType::Gyro)],
-            name: Some(str_of(name)),
+            name: Some(name.to_owned()),
             ..VirtualJoystickDesc::default()
         };
-        let id = attach_virtual_joystick(desc).or_raise();
-        let joystick = Joystick::open(id).or_raise();
-        native()
-            .get_nested_class("VirtualGamepad")
-            .wrap_data(VirtualBox { id, joystick: Some(joystick) }, &*VIRTUAL_WRAPPER)
-    }
-);
-
-methods!(
-    RbGamepad,
-    rtself,
-
-    fn pad_id() -> Fixnum {
-        Fixnum::new(rtself.gamepad().id() as i64)
+        let id = attach_virtual_joystick(desc)?;
+        let joystick = Joystick::open(id)?;
+        Ok(VirtualGamepad { id, joystick: Some(joystick) })
     }
 
-    fn pad_name() -> AnyObject {
-        opt_string(rtself.gamepad().name().or_raise())
+    pub fn id(&self) -> i64 {
+        self.id as i64
     }
 
-    fn pad_type_name() -> AnyObject {
-        opt_string(rtself.gamepad().gamepad_type().as_str().map(str::to_owned))
-    }
-
-    fn pad_player_index() -> Fixnum {
-        Fixnum::new(rtself.gamepad().player_index() as i64)
-    }
-
-    fn pad_connected() -> Boolean {
-        Boolean::new(rtself.gamepad().connected())
-    }
-
-    fn pad_button(index: AnyObject) -> Boolean {
-        Boolean::new(rtself.gamepad().button(button_of(i32_of(index, "button"))))
-    }
-
-    fn pad_has_button(index: AnyObject) -> Boolean {
-        Boolean::new(rtself.gamepad().has_button(button_of(i32_of(index, "button"))))
-    }
-
-    fn pad_axis(index: AnyObject) -> Fixnum {
-        Fixnum::new(rtself.gamepad().axis(axis_of(i32_of(index, "axis"))) as i64)
-    }
-
-    fn pad_has_axis(index: AnyObject) -> Boolean {
-        Boolean::new(rtself.gamepad().has_axis(axis_of(i32_of(index, "axis"))))
-    }
-
-    // Strengths 0..0xFFFF; false when this pad cannot rumble.
-    fn pad_rumble(low: AnyObject, high: AnyObject, ms: AnyObject) -> Boolean {
-        let (low, high) = (i64_of(low, "low") as u16, i64_of(high, "high") as u16);
-        let ms = i64_of(ms, "ms") as u32;
-        Boolean::new(rtself.gamepad().rumble(low, high, ms).is_ok())
-    }
-
-    fn pad_rumble_triggers(left: AnyObject, right: AnyObject, ms: AnyObject) -> Boolean {
-        let (left, right) = (i64_of(left, "left") as u16, i64_of(right, "right") as u16);
-        let ms = i64_of(ms, "ms") as u32;
-        Boolean::new(rtself.gamepad().rumble_triggers(left, right, ms).is_ok())
-    }
-
-    fn pad_set_led(r: AnyObject, g: AnyObject, b: AnyObject) -> Boolean {
-        let (r, g, b) = (u8_of(r, "r"), u8_of(g, "g"), u8_of(b, "b"));
-        Boolean::new(rtself.gamepad().set_led(r, g, b).is_ok())
-    }
-
-    // Sensor types are SDL's numbers; see `Rbgame::Sensor::TYPES`.
-    fn pad_has_sensor(index: AnyObject) -> Boolean {
-        Boolean::new(rtself.gamepad().has_sensor(sensor_type_of(i32_of(index, "sensor"))))
-    }
-
-    fn pad_set_sensor_enabled(index: AnyObject, enabled: AnyObject) -> NilClass {
-        let sensor_type = sensor_type_of(i32_of(index, "sensor"));
-        rtself.gamepad().set_sensor_enabled(sensor_type, truthy(enabled)).or_raise();
-        NilClass::new()
-    }
-
-    fn pad_sensor_enabled(index: AnyObject) -> Boolean {
-        Boolean::new(rtself.gamepad().sensor_enabled(sensor_type_of(i32_of(index, "sensor"))))
-    }
-
-    // Readings per second, 0.0 when unknown.
-    fn pad_sensor_rate(index: AnyObject) -> Float {
-        Float::new(rtself.gamepad().sensor_data_rate(sensor_type_of(i32_of(index, "sensor"))) as f64)
-    }
-
-    // The latest [x, y, z] of a sensor: m/s^2 for accelerometers, rad/s for gyroscopes.
-    fn pad_sensor_data(index: AnyObject) -> Array {
-        let mut data = [0.0f32; 3];
-        rtself.gamepad().sensor_data(sensor_type_of(i32_of(index, "sensor")), &mut data).or_raise();
-        floats(data)
-    }
-
-    fn pad_close() -> NilClass {
-        rtself.get_data_mut(&*GAMEPAD_WRAPPER).gamepad = None;
-        NilClass::new()
-    }
-);
-
-methods!(
-    RbVirtualGamepad,
-    rtself,
-
-    fn vpad_id() -> Fixnum {
-        Fixnum::new(rtself.get_data_mut(&*VIRTUAL_WRAPPER).id as i64)
-    }
-
-    fn vpad_set_button(index: AnyObject, down: AnyObject) -> NilClass {
-        let index = i32_of(index, "button");
-        if !(0..VIRTUAL_BUTTONS as i32).contains(&index) {
-            raise_arg("the virtual gamepad has no such button");
+    pub fn set_button(&self, index: Int, down: Truthy) -> NativeResult<()> {
+        if !(0..VIRTUAL_BUTTONS as i64).contains(&index.0) {
+            return arg_error("the virtual gamepad has no such button");
         }
-        rtself.joystick().set_virtual_button(index as usize, truthy(down)).or_raise();
-        NilClass::new()
+        Ok(self.get()?.set_virtual_button(index.0 as usize, down.0)?)
     }
 
     // `value` is SDL's -32768..32767.
-    fn vpad_set_axis(index: AnyObject, value: AnyObject) -> NilClass {
-        let index = i32_of(index, "axis");
-        if !(0..VIRTUAL_AXES as i32).contains(&index) {
-            raise_arg("the virtual gamepad has no such axis");
+    pub fn set_axis(&self, index: Int, value: Int) -> NativeResult<()> {
+        if !(0..VIRTUAL_AXES as i64).contains(&index.0) {
+            return arg_error("the virtual gamepad has no such axis");
         }
-        let value = i64_of(value, "value").clamp(i16::MIN as i64, i16::MAX as i64) as i16;
-        rtself.joystick().set_virtual_axis(index as usize, value).or_raise();
-        NilClass::new()
+        let value = value.0.clamp(i16::MIN as i64, i16::MAX as i64) as i16;
+        Ok(self.get()?.set_virtual_axis(index.0 as usize, value)?)
     }
 
     // A reading from one of the pad's sensors (accelerometer or gyroscope),
     // delivered on the next pump once the pad has that sensor enabled.
-    fn vpad_send_sensor(index: AnyObject, timestamp_ns: AnyObject, values: Array) -> NilClass {
-        let sensor_type = sensor_type_of(i32_of(index, "sensor"));
-        let timestamp = i64_of(timestamp_ns, "timestamp_ns").max(0) as u64;
-        let values = f32s_of(values, "values");
+    pub fn send_sensor(&self, index: Int, timestamp_ns: Int, values: Vec<Num>) -> NativeResult<()> {
         if values.len() != 3 {
-            raise_arg("a sensor reading has three values");
+            return arg_error("a sensor reading has three values");
         }
-        rtself.joystick().send_virtual_sensor_data(sensor_type, timestamp, &values).or_raise();
-        NilClass::new()
+        let values: Vec<f32> = values.iter().map(|value| value.0 as f32).collect();
+        Ok(self.get()?.send_virtual_sensor_data(sensor_type_of(index)?, timestamp_ns.0.max(0) as u64, &values)?)
     }
 
-    fn vpad_detach() -> NilClass {
-        let data = rtself.get_data_mut(&*VIRTUAL_WRAPPER);
-        if data.joystick.take().is_some() {
-            detach_virtual_joystick(data.id).or_raise();
+    pub fn detach(&mut self) -> NativeResult<()> {
+        if self.joystick.take().is_some() {
+            detach_virtual_joystick(self.id)?;
         }
-        NilClass::new()
+        Ok(())
     }
-);
+}
 
-pub fn define(native: &mut rutie::Module) {
-    let mut klass = native.define_nested_class("Gamepad", None);
-    klass.undef_alloc_func();
-    klass.def_self("ids", pad_ids);
-    klass.def_self("open", pad_open);
-    klass.def("id", pad_id);
-    klass.def("name", pad_name);
-    klass.def("type_name", pad_type_name);
-    klass.def("player_index", pad_player_index);
-    klass.def("connected?", pad_connected);
-    klass.def("button?", pad_button);
-    klass.def("has_button?", pad_has_button);
-    klass.def("axis", pad_axis);
-    klass.def("has_axis?", pad_has_axis);
-    klass.def("rumble", pad_rumble);
-    klass.def("rumble_triggers", pad_rumble_triggers);
-    klass.def("set_led", pad_set_led);
-    klass.def("has_sensor?", pad_has_sensor);
-    klass.def("set_sensor_enabled", pad_set_sensor_enabled);
-    klass.def("sensor_enabled?", pad_sensor_enabled);
-    klass.def("sensor_rate", pad_sensor_rate);
-    klass.def("sensor_data", pad_sensor_data);
-    klass.def("close", pad_close);
-
-    let mut virtual_klass = native.define_nested_class("VirtualGamepad", None);
-    virtual_klass.undef_alloc_func();
-    virtual_klass.def_self("attach", vpad_attach);
-    virtual_klass.def("id", vpad_id);
-    virtual_klass.def("set_button", vpad_set_button);
-    virtual_klass.def("set_axis", vpad_set_axis);
-    virtual_klass.def("send_sensor", vpad_send_sensor);
-    virtual_klass.def("detach", vpad_detach);
+pub fn define() {
+    Gamepad::define_ruby();
+    VirtualGamepad::define_ruby();
 }

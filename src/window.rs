@@ -1,25 +1,28 @@
 //! `Rbgame::Native::Window`: an SDL window handle.
 
-use rutie::{AnyObject, Array, Boolean, Fixnum, Module, NilClass, Object, RString};
-use sdl3::events::window::WindowFlags;
-use sdl3::video::Window;
+use rutie::{rubyclass, rubymethods, rubymodule};
+use sdl3::video::Window as SdlWindow;
 
-use crate::support::{i32_of, i64_of, native, pair, raise_state, str_of, truthy, OrRaise};
-use crate::surface::RbSurface;
+use crate::support::{state_error, Int, NativeResult, Truthy};
+use crate::surface::Surface;
 
-pub struct WindowBox {
-    window: Option<Window>,
+/// Instances come only from Rust (`Native.create_window`), never from
+/// `Window.new`; the window is destroyed with the object or by `destroy`.
+#[rubyclass(path = "Rbgame::Native::Window", allocator = false)]
+pub struct Window {
+    window: Option<SdlWindow>,
 }
 
-impl WindowBox {
-    fn get(&self) -> &Window {
-        self.window
-            .as_ref()
-            .unwrap_or_else(|| raise_state("the window has been destroyed"))
+impl Window {
+    pub fn get(&self) -> NativeResult<&SdlWindow> {
+        match &self.window {
+            Some(window) => Ok(window),
+            None => state_error("the window has been destroyed"),
+        }
     }
 }
 
-impl Drop for WindowBox {
+impl Drop for Window {
     fn drop(&mut self) {
         if let Some(window) = self.window.take() {
             window.destroy();
@@ -27,181 +30,124 @@ impl Drop for WindowBox {
     }
 }
 
-wrappable_struct!(WindowBox, WindowWrapper, WINDOW_WRAPPER);
-native_class!(RbWindow, "Window");
+#[rubymodule(path = "Rbgame::Native")]
+mod functions {
+    use sdl3::events::window::WindowFlags;
+    use sdl3::video::Window as SdlWindow;
 
-pub fn wrap(window: Window) -> AnyObject {
-    native()
-        .get_nested_class("Window")
-        .wrap_data(WindowBox { window: Some(window) }, &*WINDOW_WRAPPER)
-}
+    use super::Window;
+    use crate::support::{Int, NativeResult};
 
-impl RbWindow {
-    pub fn window(&self) -> &Window {
-        self.get_data(&*WINDOW_WRAPPER).get()
+    pub fn create_window(title: &str, width: Int, height: Int, flags: Int) -> NativeResult<Window> {
+        let window = SdlWindow::create(title, width.0 as i32, height.0 as i32, WindowFlags(flags.0 as u64))?;
+        Ok(Window { window: Some(window) })
     }
 }
 
-methods!(
-    AnyObject,
-    _rtself,
-
-    fn win_create(title: RString, width: AnyObject, height: AnyObject, flags: AnyObject) -> AnyObject {
-        let window = Window::create(
-            &str_of(title),
-            i32_of(width, "width"),
-            i32_of(height, "height"),
-            WindowFlags(i64_of(flags, "flags") as u64),
-        )
-        .or_raise();
-        wrap(window)
-    }
-);
-
-methods!(
-    RbWindow,
-    rtself,
-
-    fn win_id() -> Fixnum {
-        Fixnum::new(rtself.window().id() as i64)
+#[rubymethods]
+impl Window {
+    pub fn id(&self) -> NativeResult<i64> {
+        Ok(self.get()?.id() as i64)
     }
 
-    fn win_title() -> RString {
-        RString::new_utf8(&rtself.window().title().or_raise())
+    pub fn title(&self) -> NativeResult<String> {
+        Ok(self.get()?.title()?)
     }
 
-    fn win_set_title(title: RString) -> NilClass {
-        rtself.window().set_title(&str_of(title)).or_raise();
-        NilClass::new()
+    #[ruby(name = "title=")]
+    pub fn set_title(&self, title: &str) -> NativeResult<()> {
+        Ok(self.get()?.set_title(title)?)
     }
 
-    fn win_size() -> Array {
-        let (w, h) = rtself.window().size().or_raise();
-        pair(w as i64, h as i64)
+    pub fn size(&self) -> NativeResult<(i64, i64)> {
+        let (w, h) = self.get()?.size()?;
+        Ok((w as i64, h as i64))
     }
 
-    fn win_set_size(width: AnyObject, height: AnyObject) -> NilClass {
-        rtself.window().set_size(i32_of(width, "width"), i32_of(height, "height")).or_raise();
-        NilClass::new()
+    pub fn resize(&self, width: Int, height: Int) -> NativeResult<()> {
+        Ok(self.get()?.set_size(width.0 as i32, height.0 as i32)?)
     }
 
-    fn win_size_in_pixels() -> Array {
-        let (w, h) = rtself.window().size_in_pixels().or_raise();
-        pair(w as i64, h as i64)
+    pub fn size_in_pixels(&self) -> NativeResult<(i64, i64)> {
+        let (w, h) = self.get()?.size_in_pixels()?;
+        Ok((w as i64, h as i64))
     }
 
-    fn win_position() -> Array {
-        let (x, y) = rtself.window().position().or_raise();
-        pair(x as i64, y as i64)
+    pub fn position(&self) -> NativeResult<(i64, i64)> {
+        let (x, y) = self.get()?.position()?;
+        Ok((x as i64, y as i64))
     }
 
-    fn win_set_position(x: AnyObject, y: AnyObject) -> NilClass {
-        rtself.window().set_position(i32_of(x, "x"), i32_of(y, "y")).or_raise();
-        NilClass::new()
+    pub fn move_to(&self, x: Int, y: Int) -> NativeResult<()> {
+        Ok(self.get()?.set_position(x.0 as i32, y.0 as i32)?)
     }
 
-    fn win_show() -> NilClass {
-        rtself.window().show().or_raise();
-        NilClass::new()
+    pub fn show(&self) -> NativeResult<()> {
+        Ok(self.get()?.show()?)
     }
 
-    fn win_hide() -> NilClass {
-        rtself.window().hide().or_raise();
-        NilClass::new()
+    pub fn hide(&self) -> NativeResult<()> {
+        Ok(self.get()?.hide()?)
     }
 
-    fn win_raise() -> NilClass {
-        rtself.window().raise().or_raise();
-        NilClass::new()
+    pub fn raise_window(&self) -> NativeResult<()> {
+        Ok(self.get()?.raise()?)
     }
 
-    fn win_set_fullscreen(fullscreen: AnyObject) -> NilClass {
-        rtself.window().set_fullscreen(truthy(fullscreen)).or_raise();
-        NilClass::new()
+    #[ruby(name = "fullscreen=")]
+    pub fn set_fullscreen(&self, fullscreen: Truthy) -> NativeResult<()> {
+        Ok(self.get()?.set_fullscreen(fullscreen.0)?)
     }
 
-    fn win_set_resizable(resizable: AnyObject) -> NilClass {
-        rtself.window().set_resizable(truthy(resizable)).or_raise();
-        NilClass::new()
+    #[ruby(name = "resizable=")]
+    pub fn set_resizable(&self, resizable: Truthy) -> NativeResult<()> {
+        Ok(self.get()?.set_resizable(resizable.0)?)
     }
 
-    fn win_set_bordered(bordered: AnyObject) -> NilClass {
-        rtself.window().set_bordered(truthy(bordered)).or_raise();
-        NilClass::new()
+    #[ruby(name = "bordered=")]
+    pub fn set_bordered(&self, bordered: Truthy) -> NativeResult<()> {
+        Ok(self.get()?.set_bordered(bordered.0)?)
     }
 
-    fn win_set_minimum_size(width: AnyObject, height: AnyObject) -> NilClass {
-        rtself
-            .window()
-            .set_minimum_size(i32_of(width, "width"), i32_of(height, "height"))
-            .or_raise();
-        NilClass::new()
+    pub fn set_minimum_size(&self, width: Int, height: Int) -> NativeResult<()> {
+        Ok(self.get()?.set_minimum_size(width.0 as i32, height.0 as i32)?)
     }
 
-    fn win_flags() -> Fixnum {
-        Fixnum::new(rtself.window().flags().or_raise().0 as i64)
+    pub fn flags(&self) -> NativeResult<i64> {
+        Ok(self.get()?.flags()?.0 as i64)
     }
 
-    fn win_set_icon(icon: RbSurface) -> NilClass {
-        let icon = crate::support::arg(icon);
-        rtself.window().set_icon(icon.surface()).or_raise();
-        NilClass::new()
+    #[ruby(name = "icon=")]
+    pub fn set_icon(&self, icon: &Surface) -> NativeResult<()> {
+        Ok(self.get()?.set_icon(icon.get())?)
     }
 
-    fn win_start_text_input() -> NilClass {
-        rtself.window().start_text_input().or_raise();
-        NilClass::new()
+    pub fn start_text_input(&self) -> NativeResult<()> {
+        Ok(self.get()?.start_text_input()?)
     }
 
-    fn win_stop_text_input() -> NilClass {
-        rtself.window().stop_text_input().or_raise();
-        NilClass::new()
+    pub fn stop_text_input(&self) -> NativeResult<()> {
+        Ok(self.get()?.stop_text_input()?)
     }
 
-    fn win_text_input_active() -> Boolean {
-        Boolean::new(rtself.window().text_input_active().or_raise())
+    #[ruby(name = "text_input_active?")]
+    pub fn text_input_active(&self) -> NativeResult<bool> {
+        Ok(self.get()?.text_input_active()?)
     }
 
-    fn win_destroy() -> NilClass {
-        if let Some(window) = rtself.get_data_mut(&*WINDOW_WRAPPER).window.take() {
+    pub fn destroy(&mut self) {
+        if let Some(window) = self.window.take() {
             window.destroy();
         }
-        NilClass::new()
     }
 
-    fn win_destroyed() -> Boolean {
-        Boolean::new(rtself.get_data(&*WINDOW_WRAPPER).window.is_none())
+    #[ruby(name = "destroyed?")]
+    pub fn destroyed(&self) -> bool {
+        self.window.is_none()
     }
-);
+}
 
-pub fn define(native: &mut Module) {
-    native.def_self("create_window", win_create);
-
-    let mut klass = native.define_nested_class("Window", None);
-    // Instances come only from Rust (`wrap_data`), never from `Window.new`.
-    klass.undef_alloc_func();
-    klass.define(|klass| {
-        klass.def("id", win_id);
-        klass.def("title", win_title);
-        klass.def("title=", win_set_title);
-        klass.def("size", win_size);
-        klass.def("resize", win_set_size);
-        klass.def("size_in_pixels", win_size_in_pixels);
-        klass.def("position", win_position);
-        klass.def("move_to", win_set_position);
-        klass.def("show", win_show);
-        klass.def("hide", win_hide);
-        klass.def("raise_window", win_raise);
-        klass.def("fullscreen=", win_set_fullscreen);
-        klass.def("resizable=", win_set_resizable);
-        klass.def("bordered=", win_set_bordered);
-        klass.def("set_minimum_size", win_set_minimum_size);
-        klass.def("flags", win_flags);
-        klass.def("icon=", win_set_icon);
-        klass.def("start_text_input", win_start_text_input);
-        klass.def("stop_text_input", win_stop_text_input);
-        klass.def("text_input_active?", win_text_input_active);
-        klass.def("destroy", win_destroy);
-        klass.def("destroyed?", win_destroyed);
-    });
+pub fn define() {
+    functions::define_ruby();
+    Window::define_ruby();
 }
