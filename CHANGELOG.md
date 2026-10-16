@@ -48,7 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `Rutie::RakeTask`'s `NO_LINK_RUTIE` and extra rustc arguments, both in
   cargo's fingerprint, are covered by the `no-link` feature and build.rs,
   and cargo runs with the `PATH` from before `bundle exec`, whose
-  deduplicated one made Rutie's build script rerun.
+  deduplicated one made Rutie's build script rerun. `rake test`,
+  `gorillas:play`, `gorillas:record` and `gorillas:test` depend on the
+  built library rather than on `rutie:build`, so they only run cargo when
+  it is missing or older than the Rust sources, `build.rs` or the Cargo
+  files.
 - `Events.each` (and so `Events.any?`, `to_a`, `grep`) yields everything
   queued: an `Events.wait` that returned an event left SDL's cycle-ending
   sentinel behind, and the next drain stopped at it before anything pushed

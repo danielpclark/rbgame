@@ -25,7 +25,24 @@ namespace :rutie do
   task(:clean) { cargo "clean" }
 end
 
-Rake::TestTask.new(test: "rutie:build") do |t|
+# The built extension, for the tasks that load it: rake runs cargo only
+# when it is missing or older than what it is built from, so playing or
+# testing an extension that is already built starts straight away.
+NATIVE_LIB = File.join("target", "release",
+                       case RbConfig::CONFIG["host_os"]
+                       when /darwin|mac os/ then "librbgame_native.dylib"
+                       when /mswin|mingw|cygwin/ then "rbgame_native.dll"
+                       else "librbgame_native.so"
+                       end)
+
+file NATIVE_LIB => FileList["src/**/*.rs", "build.rs", "Cargo.toml", "Cargo.lock"] do
+  cargo "build", "--release"
+  # Cargo leaves the library alone when nothing it tracks changed (a
+  # touched file, say); stamp it so the next run doesn't ask again.
+  FileUtils.touch(NATIVE_LIB)
+end
+
+Rake::TestTask.new(test: NATIVE_LIB) do |t|
   t.libs << "test" << "lib"
   t.test_files = FileList["test/**/*_test.rb"]
   t.warning = false
@@ -33,19 +50,19 @@ end
 
 namespace :gorillas do
   desc "Play the Gorillas demo"
-  task play: "rutie:build" do
+  task play: NATIVE_LIB do
     ruby "-Ilib", "-Iexamples/gorillas/lib", "examples/gorillas/bin/gorillas"
   end
 
   desc "Run the Gorillas demo unattended and save frames (DIR=tmp/frames FRAMES=600)"
-  task record: "rutie:build" do
+  task record: NATIVE_LIB do
     dir = ENV.fetch("DIR", "tmp/frames")
     frames = ENV.fetch("FRAMES", "600")
     ruby "-Ilib", "-Iexamples/gorillas/lib", "examples/gorillas/bin/gorillas",
          "--autoplay", "--record", dir, "--frames", frames
   end
 
-  Rake::TestTask.new(test: "rutie:build") do |t|
+  Rake::TestTask.new(test: NATIVE_LIB) do |t|
     t.libs << "examples/gorillas/test" << "examples/gorillas/lib" << "lib"
     t.test_files = FileList["examples/gorillas/test/**/*_test.rb"]
     t.warning = false
@@ -75,8 +92,8 @@ namespace :sdl do
     cargo_toml = File.read("Cargo.toml", encoding: "UTF-8")
     # Every crate from that repository moves together.
     File.write("Cargo.toml", cargo_toml.gsub(/(danielpclark\/SDL"[^}]*rev = ")\h+(")/, "\\1#{rev}\\2"))
-    sh "cargo", "update", "-p", "sdl3", "-p", "sdl3-image", "-p", "sdl3-mixer", "-p", "sdl3-ttf"
-    sh "cargo", "build", "--release"
+    cargo "update", "-p", "sdl3", "-p", "sdl3-image", "-p", "sdl3-mixer", "-p", "sdl3-ttf"
+    cargo "build", "--release"
     puts "SDL pinned to #{rev}. Run the tests, then commit Cargo.toml and Cargo.lock."
   end
 end
