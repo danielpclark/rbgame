@@ -30,8 +30,8 @@ class ShotTest < Minitest::Test
     gale = Shot.new(origin: [0, 100], angle: 45, velocity: 50, wind: Wind.new(speed: 9))
     assert_operator gale.position(4).x, :>, calm.position(4).x
     assert_in_delta gale.position(4).y, calm.position(4).y
-    assert_in_delta 0.052 * 81, Wind.new(speed: 9).acceleration
-    assert_in_delta(-0.052 * 81, Wind.new(speed: -9).acceleration)
+    assert_in_delta 0.0312 * 81, Wind.new(speed: 9).acceleration
+    assert_in_delta(-0.0312 * 81, Wind.new(speed: -9).acceleration)
   end
 
   def test_wind_strength_runs_zero_to_nine_point_nine_in_tenths
@@ -62,8 +62,8 @@ class ShotTest < Minitest::Test
   def test_a_strong_wind_has_a_humungous_effect
     assert_in_delta 9.9 * 9.9 * drift(1).last, drift(9.9).last, 1e-6
     assert_operator drift(1).last, :<, 10, "a strength of 1.0 barely nudges it"
-    assert_in_delta 163, drift(9.9).last, 3, "a 9.9 carries it about 163 pixels in eight seconds"
-    assert_in_delta 1.7, drift(1).last, 0.1, "and a 1.0 about 1.7"
+    assert_in_delta 98, drift(9.9).last, 2, "a 9.9 carries it about 98 pixels in eight seconds"
+    assert_in_delta 1.0, drift(1).last, 0.1, "and a 1.0 about 1"
     assert_operator drift(5.1).last, :>, drift(5).last, "and a tenth more is a little further"
   end
 
