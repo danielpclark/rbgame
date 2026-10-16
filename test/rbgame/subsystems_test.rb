@@ -31,6 +31,9 @@ end
 class SubsystemsTest < Minitest::Test
   def test_started_subsystems_report_so
     RbgameTest.screen
+    # A Game test run earlier (in some orders) quits SDL as a game does on
+    # exit; init is idempotent, so this is what any program does on start.
+    Rbgame.init
     assert Rbgame::Subsystems.video.started?
     assert Rbgame::Subsystems.audio.started?
     assert Rbgame.initialized?(:video)
