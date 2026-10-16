@@ -12,6 +12,7 @@ module Gorillas
     WINDOW_DARK = EGA[8]
     GORILLA = EGA[6]
     GORILLA_DETAIL = EGA[0]
+    GORILLA_FACE = Rbgame::Color.new(221, 144, 62) # tan; not an EGA colour
     BANANA = EGA[14]
     EXPLOSION = EGA[4]
     EXPLOSION_CORE = EGA[14]

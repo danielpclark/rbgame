@@ -7,10 +7,11 @@ scores when it lands on the other gorilla. The tunes are the original PLAY
 strings, rendered by `Rbgame::Synth` as PC-speaker square waves.
 
 It looks the way the original did on an EGA monitor: the 640x350 field is
-shown stretched to 4:3, the gorillas, sun and city are drawn with the same
-boxes, lines and arcs as DrawGorilla, DoSun and MakeCityScape (squashed the
-way QBasic's CIRCLE squashed them, so they come out round), and the wind
-is rolled afresh for every throw.
+shown stretched to 4:3, the sun and city are drawn with the same boxes,
+lines and arcs as DoSun and MakeCityScape (squashed the way QBasic's CIRCLE
+squashed them, so they come out round), and the wind is rolled afresh for
+every throw. The gorillas are pixel art of their own: brown fur, tan faces
+and black brows, fists on their hips or raised to throw.
 
 ```sh
 bin/gorillas                                  # play (Esc or Q quits)
