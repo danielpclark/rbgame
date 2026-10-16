@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   motion sensors, and `Gamepad::Virtual#tilt` to fake them.
 
 ### Fixed
+- `bin/setup` and a plain `cargo build` link on macOS: a build script
+  leaves the `rb_*` symbols to the loader (`-undefined dynamic_lookup`),
+  as `rake rutie:build` did, instead of failing with undefined symbols.
 - `Events.each` (and so `Events.any?`, `to_a`, `grep`) yields everything
   queued: an `Events.wait` that returned an event left SDL's cycle-ending
   sentinel behind, and the next drain stopped at it before anything pushed
