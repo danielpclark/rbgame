@@ -13,7 +13,7 @@ module Gorillas
         canvas.fill(Palette::SKY)
         @city.draw(canvas)
         SunSprite.new(@round.sun).draw(canvas)
-        @round.gorillas.each { |gorilla| GorillaSprite.new(gorilla).draw(canvas) }
+        @round.standing_gorillas.each { |gorilla| GorillaSprite.new(gorilla).draw(canvas) }
         BananaSprite.new(@round.banana).draw(canvas) if @round.banana
         ExplosionSprite.new(@round.explosion).draw(canvas) if @round.explosion
         WindGauge.new(@round.wind, after: @round.match.left.name).draw(canvas)

@@ -59,6 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   since, such as the Quit in the README's loop.
 
 ### Changed
+- A Gorillas gorilla hit by a banana is gone from the explosion on, for
+  the rest of the round, instead of standing in its own crater while the
+  winner dances (`Round#standing_gorillas`).
 - Gorillas' wind is a strength from 0.0 to 9.9 in tenths, either way,
   instead of GORILLA.BAS's -15..15. It pushes the banana sideways the
   whole flight with an acceleration that grows with the square of the

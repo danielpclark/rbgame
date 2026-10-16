@@ -37,6 +37,11 @@ module Gorillas
     # --- what the scenes ask -------------------------------------------
 
     def gorillas = @gorillas.values
+
+    # The gorillas still standing: one a banana hits is gone, blown up in
+    # the explosion, and stays gone for the rest of the round.
+    def standing_gorillas = match.players.reject { |player| fallen?(player) }.map { |player| gorilla_of(player) }
+    def fallen?(player) = !!outcome&.hit_gorilla? && outcome.victim.equal?(player)
     def gorilla_of(player) = @gorillas.fetch(player.side)
     def thrower_gorilla = gorilla_of(thrower)
     def target = match.opponent_of(thrower)

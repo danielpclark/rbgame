@@ -44,10 +44,13 @@ class RoundTest < Minitest::Test
     end
     skip "no clean shot on any of these cities" unless aim
 
+    assert_equal 2, @round.standing_gorillas.length
     @round.throw(aim.angle, aim.velocity)
     run_until(@round) { |r| r.exploding? }
     assert_includes @heard, :gorilla_hit
     assert @round.explosion
+    assert_equal [@round.gorilla_of(@match.left)], @round.standing_gorillas, "the gorilla hit is gone in the explosion"
+    assert @round.fallen?(@match.right)
     run_until(@round) { |r| r.dancing? }
     assert_includes @heard, :victory
     assert_equal 1, @match.left.score
@@ -55,6 +58,7 @@ class RoundTest < Minitest::Test
     assert @round.outcome.hit_gorilla?
     assert_equal @match.right, @round.outcome.victim
     assert_equal @match.left, @round.winner
+    assert_equal [@round.gorilla_of(@match.left)], @round.standing_gorillas, "and stays gone while the winner dances"
     refute @match.over?
   end
 
