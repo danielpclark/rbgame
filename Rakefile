@@ -1,11 +1,29 @@
 # frozen_string_literal: true
 
 require "rake/testtask"
-require "rutie/rake_task"
 
 # `rake rutie:build` compiles the Rust extension (cargo build --release);
-# `rake rutie:clean` removes the build.
-Rutie::RakeTask.new
+# `rake rutie:clean` removes the build. This is the same build bin/setup
+# and a bare `cargo build --release` run (build.rs adds the macOS link
+# flag, the `no-link` feature leaves libruby out), so cargo reuses it
+# instead of rebuilding. Rutie::RakeTask built with NO_LINK_RUTIE and extra
+# rustc arguments, which cargo fingerprints, so the two kept rebuilding.
+#
+# Cargo runs in the environment from before `bundle exec`, too: Bundler
+# drops repeated PATH entries, and Rutie's build script reruns whenever
+# PATH changes (it is how it notices a switch of Ruby).
+def cargo(*args)
+  run = -> { sh "cargo", *args }
+  defined?(Bundler) ? Bundler.with_original_env(&run) : run.call
+end
+
+namespace :rutie do
+  desc "Build the Rust extension"
+  task(:build) { cargo "build", "--release" }
+
+  desc "Remove the Rust build output (cargo clean)"
+  task(:clean) { cargo "clean" }
+end
 
 Rake::TestTask.new(test: "rutie:build") do |t|
   t.libs << "test" << "lib"

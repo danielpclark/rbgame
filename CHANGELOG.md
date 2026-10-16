@@ -43,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `bin/setup` and a plain `cargo build` link on macOS: a build script
   leaves the `rb_*` symbols to the loader (`-undefined dynamic_lookup`),
   as `rake rutie:build` did, instead of failing with undefined symbols.
+- `rake rutie:build` runs the same `cargo build --release` as `bin/setup`,
+  so switching between them no longer rebuilds Rutie and the extension:
+  `Rutie::RakeTask`'s `NO_LINK_RUTIE` and extra rustc arguments, both in
+  cargo's fingerprint, are covered by the `no-link` feature and build.rs,
+  and cargo runs with the `PATH` from before `bundle exec`, whose
+  deduplicated one made Rutie's build script rerun.
 - `Events.each` (and so `Events.any?`, `to_a`, `grep`) yields everything
   queued: an `Events.wait` that returned an event left SDL's cycle-ending
   sentinel behind, and the next drain stopped at it before anything pushed
