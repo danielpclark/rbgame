@@ -173,6 +173,36 @@ bundle exec rake gorillas:play
 Ruby 4.0 users: change `rutie = "0.13.3"` to `"0.14.3"` in `Cargo.toml`
 (Rutie tracks one Ruby line per release).
 
+### In your own project
+
+rbgame is not on RubyGems yet; Bundler installs it straight from GitHub.
+Add it to your `Gemfile`:
+
+```ruby
+gem "rbgame", github: "danielpclark/rbgame"
+```
+
+(or `bundle add rbgame --github danielpclark/rbgame`, which writes that
+line and installs). The gem declares no extension, so `bundle install`
+checks the repository out but does not compile the Rust half; build it once
+in the checkout:
+
+```sh
+bundle info rbgame --path     # prints the checkout, .../bundler/gems/rbgame-<sha>
+cd <that directory>
+cargo build --release
+```
+
+`require "rbgame"` then finds `target/release` inside that checkout. The
+build compiles the whole SDL translation and takes a few minutes. Pin a
+revision with `ref:`, `branch:` or `tag:` as with any git gem. `bundle
+update rbgame` moves to a new checkout, so build again afterwards.
+
+To keep the build elsewhere, say in CI or shared between projects, set the
+environment variable `RBGAME_NATIVE_LIB_DIR` to the directory holding
+`librbgame_native.*`. `RBGAME_NATIVE_PROFILE=debug` loads a plain `cargo
+build` instead, and `CARGO_TARGET_DIR` is honoured when set.
+
 ## The demo: Gorillas
 
 `examples/gorillas` is QBasic's GORILLA.BAS (1990) written again in Ruby:
